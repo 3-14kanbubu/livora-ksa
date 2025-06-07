@@ -18,8 +18,14 @@ urlpatterns = [
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('submit-health-report/', views.submit_health_report, name='submit_health_report'),
     path('request-history/', views.request_history, name='request_history'),
-    # New API endpoints for student info
+    path('upload-medical-history/', views.upload_medical_history, name='upload_medical_history'),
+    path('medical-history/', views.medical_history_page, name='medical_history_page'),
     path('api/students/', views.get_student_list, name='get_student_list'),
     path('api/student/<str:student_id>/', views.get_student_details, name='get_student_details'),
+    path('mark-report-viewed/<int:report_id>/', views.mark_report_viewed, name='mark_report_viewed'),
+    path('save-nurse-comment/<int:report_id>/', views.save_nurse_comment, name='save_nurse_comment'),
+    path('admin-report-detail/<int:report_id>/', views.admin_report_detail, name='admin_report_detail'),
+    path('admin-comp/admin_dtld_window/<int:report_id>/', views.admin_dtld_window, name='admin_dtld_window'),
+    path('toggle-star/<int:report_id>/', views.toggle_star, name='toggle_star'),
 ]
 

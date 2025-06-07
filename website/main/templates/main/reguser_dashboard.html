@@ -1,7 +1,7 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Livora{% endblock %}</title>
@@ -167,7 +167,7 @@
             max-width: 300px;
             border-radius: 20px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0);
-            {% comment %} margin-top: 30px; {% endcomment %}
+            
         }
     </style>
 </head>
@@ -206,7 +206,7 @@
                 </div>
             </div>
 
-            <!-- Right Panel -->
+       
             <div class="content-panel">
                 <div class="tab-menu">
                     <a href="#" class="active" id="main-tab" onclick="changeTab('main')">Main Page</a>
@@ -215,168 +215,98 @@
                 </div>
 
                 <div class="main-area" id="main-area">
-                    <!-- Dynamic loading -->
+                  
                 </div>
             </div>
         </div>
     </div>
 
-    {% comment %} <script>
-        function loadComponent() {
-            fetch("{% url 'ruser_comp' 'symp_std' %}")
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById(`symptom-component`).innerHTML = html;
-                });
-        } {% endcomment %}
+ 
+<!--med_his_std.html-->
+<script>
+  function loadSymptomComponent() {
+    fetch("{% url 'ruser_comp' 'symp_std' %}")
+      .then(response => response.text())
+      .then(html => {
+        const container = document.getElementById('symptom-component');
+        container.innerHTML = html;
 
-
-   <script>
-       // Tab switching
-       function changeTab(tab) {
-           const tabMap = {
-               'main': 'main_std',
-               'medical': 'med_his_std',
-               'history': 'rqst_his_std'
-           };
-
-
-           const component = tabMap[tab];
-           if (!component) return;
-
-
-           document.querySelectorAll('.tab-menu a').forEach(link => {
-               link.classList.remove('active');
-
-
-           });
-           document.getElementById(`${tab}-tab`).classList.add('active');
-
-
-           fetch(`/ruser-comp/${component}`)
-               .then(response => response.text())
-               .then(html => {
-                   document.getElementById('main-area').innerHTML = html;
-                    fetch(`/ruser-comp/${component}`)
-                        .then(response => response.text())
-                        .then(html => {
-                            const container = document.getElementById('main-area');
-                            container.innerHTML = html;
-                            const scripts = container.getElementsByTagName('script');
-                            Array.from(scripts).forEach(oldScript => {
-                                const newScript = document.createElement('script');
-                                Array.from(oldScript.attributes).forEach(attr => {
-                                    newScript.setAttribute(attr.name, attr.value);
-                                });
-                                newScript.textContent = oldScript.textContent;
-                                oldScript.parentNode.replaceChild(newScript, oldScript);
-                            });
-
-                            if (component === 'med_his_std') {
-                                initializeMedicalHistoryForm();
-                            }
-                        });
-
-               });
-           }
-          
-           window.onload = () => changeTab('main');      
-   </script>
-
-    <script>        function loadSymptomComponent() {
-            fetch("{% url 'ruser_comp' 'symp_std' %}")
-                .then(response => response.text())
-                .then(html => {
-                    const container = document.getElementById('symptom-component');
-                    container.innerHTML = html;
-                    const scripts = container.getElementsByTagName('script');
-                    Array.from(scripts).forEach(oldScript => {
-                        const newScript = document.createElement('script');
-                        Array.from(oldScript.attributes).forEach(attr => {
-                            newScript.setAttribute(attr.name, attr.value);
-                        });
-                        newScript.textContent = oldScript.textContent;
-                        oldScript.parentNode.replaceChild(newScript, oldScript);
-                    });
-
-                    document.getElementById('minus-btn').addEventListener('click', () => {
-                        let input = document.getElementById('duration');
-                        if (parseInt(input.value)>0) {
-                            input.value = parseInt(input.value)-1;
-                        }
-                    });
-                    document.getElementById('plus-btn').addEventListener('click', () => {
-                        let input = document.getElementById('duration');
-                        input.value = parseInt(input.value)+1;
-                    });
-                    
-                });
-        }
-
-        window.onload = () => {
-            loadSymptomComponent(); // load left panel
-            changeTab('main');      // load right panel
-        };
-    </script>
-
-    <script>
         const selectedHints = [];
+        const textarea = document.getElementById('symptom_textarea');
+        const comments = document.getElementById('extra_comments');
+        const sendBtn = document.getElementById('sendBtn');
+        const durationInput = document.getElementById("duration");
+        const minusBtn = document.getElementById("minus-btn");
+        const plusBtn = document.getElementById("plus-btn");
 
-        function toggleHint(button, hint) {
-            const index = selectedHints.indexOf(hint);
+        window.toggleHint = function (button, hint) {
+          const index = selectedHints.indexOf(hint);
+          if (index === -1) {
+            selectedHints.push(hint);
+            button.classList.add('selected');
+          } else {
+            selectedHints.splice(index, 1);
+            button.classList.remove('selected');
+          }
 
-             if (index === -1) {
-                selectedHints.push(hint);
-                button.classList.add('selected');
-            } else {
-                selectedHints.splice(index, 1);
-                button.classList.remove('selected');
-            }
-
-            updateSymptomTextarea();
-            updateSubmitButton();
-        }
+          updateSymptomTextarea();
+          updateSubmitButton();
+        };
 
         function updateSymptomTextarea() {
-            const textarea = document.getElementById('symptom_textarea');
-            if (selectedHints.length === 0) {
+          if (selectedHints.length === 0) {
             textarea.value = '';
             return;
-            }
-
-            const sentence = selectedHints
+          }
+          const sentence = selectedHints
             .map((s, i) => i === 0 ? capitalize(s) : s.toLowerCase())
             .join(', ');
-
-            textarea.value = sentence;
+          textarea.value = sentence;
         }
 
         function capitalize(word) {
-            return word.charAt(0).toUpperCase() + word.slice(1);
+          return word.charAt(0).toUpperCase() + word.slice(1);
         }
 
         function updateSubmitButton() {
-            const sendBtn = document.getElementById('sendBtn');
-            const symptomText = document.getElementById('symptom_textarea');
-            if (!sendBtn || !symptomText) return;
-
-            const hasSymptoms = symptomText.value.trim() !== '';
-            sendBtn.disabled = !hasSymptoms;
+          const hasSymptoms = textarea?.value.trim() !== '';
+          sendBtn.disabled = !hasSymptoms;
         }
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const textarea = document.getElementById('symptom_textarea');
-            const comments = document.getElementById('extra_comments');
+        textarea?.addEventListener('input', updateSubmitButton);
+        comments?.addEventListener('input', updateSubmitButton);
 
-            if (textarea) {
-                textarea.addEventListener('input', updateSubmitButton);
-            }
-
-            if (comments) {
-                comments.addEventListener('input', updateSubmitButton);
-            }
-            updateSubmitButton(); // Disable/enable button on load
+        minusBtn?.addEventListener("click", () => {
+          let value = parseInt(durationInput.value);
+          if (value > 0) durationInput.value = value - 1;
         });
-    </script>
+
+        plusBtn?.addEventListener("click", () => {
+          let value = parseInt(durationInput.value);
+          durationInput.value = value + 1;
+        });
+
+        const form = document.getElementById('symptomForm');
+        form?.addEventListener('submit', function (e) {
+          const now = new Date();
+          const formattedTime = now.toLocaleString();
+          localStorage.setItem('submittedTime', formattedTime);
+          localStorage.setItem('symptoms', textarea.value);
+          localStorage.setItem('extraNotes', comments?.value || 'None');
+          localStorage.setItem('duration', durationInput.value || '0');
+        });
+
+        updateSubmitButton();
+      });
+  }
+
+  window.onload = () => {
+    loadSymptomComponent();
+    const savedTab = localStorage.getItem('selectedTab') || 'main';
+    console.log("🔍 savedTab:", savedTab);
+    changeTab(savedTab);
+  };
+</script>
+<script src="/static/tab.js"></script>
 </body>
 </html>

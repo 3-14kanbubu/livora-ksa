@@ -1,5 +1,5 @@
 from django import forms
-from .models import HealthReport
+from .models import HealthReport, MedicalHistory
 from django.contrib.auth.forms import AuthenticationForm
 
 
@@ -42,6 +42,11 @@ class HealthReportForm(forms.ModelForm):
         model = HealthReport
         fields = ['symptoms', 'other_symptoms', 'extra_comments', 'medical_record','duration']
         
+class MedicalHistoryForm(forms.ModelForm):
+    class Meta:
+        model = MedicalHistory
+        fields = ['dob', 'sex', 'allergies', 'other_issues', 'insurance', 'insurance_start', 'insurance_end']
+
         
 class StyledLoginForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={

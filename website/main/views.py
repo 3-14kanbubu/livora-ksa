@@ -8,14 +8,14 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 from django.contrib import messages
-from .models import HealthReport, NurseStatus, NurseAnnouncement
-from .forms import HealthReportForm
-import requests 
+from .models import HealthReport, NurseStatus, NurseAnnouncement, MedicalHistory,UserProfile
+from .forms import HealthReportForm,MedicalHistoryForm
+import requests, json
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.template import TemplateDoesNotExist
-from django.http import HttpResponse
+from django.http import HttpResponse 
 
 def home(request):
     return render(request, 'main/livora.html')
@@ -229,6 +229,7 @@ def admin_dashboard(request):
         'is_admin': True
     })
 
+
 @login_required
 @user_passes_test(is_admin)
 def admin_comp(request, component_name):
@@ -237,7 +238,31 @@ def admin_comp(request, component_name):
         'office_status': cache.get('nurse_status', 'closed'),
         'is_admin': True
     }
+    
+    if component_name == 'admin_history':
+        print("Loading admin history")
+        page = request.GET.get('page', 1)
+        reports_per_page = 10  
+        reports = HealthReport.objects.all().order_by('-created_at')
+        
+    
+        unviewed_count = reports.filter(nurse_viewed=False).count()
+        context['unviewed_count'] = unviewed_count
+        
+        from django.core.paginator import Paginator
+        paginator = Paginator(reports, reports_per_page)
+        try:
+            reports_page = paginator.page(page)
+        except:
+            reports_page = paginator.page(1)
+            
+        print(f"Found {reports.count()} reports, showing page {page}")
+        context['health_reports'] = reports_page
+        context['page_obj'] = reports_page
+        context['total_pages'] = paginator.num_pages
+    
     return render(request, f'main/admin_comp/{component_name}.html', context)
+
 
 def custom_logout(request):
     was_staff = request.user.is_staff
@@ -246,12 +271,23 @@ def custom_logout(request):
         return redirect('nurse_login')
     return redirect('livora')
 
+def mark_report_viewed(request, report_id):
+    try:
+        report = get_object_or_404(HealthReport, id=report_id)
+        print(f"Marking report {report_id} as viewed")  
+        report.nurse_viewed = True
+        report.save()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        print(f"Error marking report as viewed: {str(e)}")  
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
 
 @login_required
 @user_passes_test(is_admin)
 def get_student_list(request):
     try:
-        # API key in settings
+        
         payload = {
             'key': settings.API_KEY,
         }
@@ -265,19 +301,180 @@ def get_student_list(request):
 
 @login_required
 @user_passes_test(is_admin)
-def get_student_details(request, student_id):
-    try:
-        payload = {
+
+def get_student_details(request):
+    name = request.GET.get('name')
+    if not name:
+        return JsonResponse({'error': 'Name parameter is required'}, status=400)
+
+    # Make API call to KSAIN's student ID lookup
+    response = requests.post(
+        'https://api.ksain.net/v1/studentID.php',
+        data={
             'key': settings.API_KEY,
-            'student_id': student_id
+            'name': name
         }
-        response = requests.get('https://api.ksain.net/v1/student-details.php', data=payload)
-        health_reports = HealthReport.objects.filter(student_id=student_id).order_by('-created_at')
-        
-        if response.status_code == 200:
-            student_data = response.json()
-            student_data['health_reports'] = list(health_reports.values())
-            return JsonResponse(student_data)
-        return JsonResponse({'error': 'Failed to fetch student details'}, status=400)
+    )
+
+    if response.status_code != 200:
+        return JsonResponse({'error': 'Failed to reach student API'}, status=response.status_code)
+
+    res_json = response.json()
+    if res_json.get('code') != 200:
+        return JsonResponse({'error': res_json.get('message', 'Student not found')}, status=400)
+
+    matched_students = res_json.get('data', [])
+    results = []
+
+    for student in matched_students:
+        student_id = student.get('studentID')
+        batch = student.get('batch')
+
+        # Find user by studentID (assuming you store it in a UserProfile model)
+        try:
+            user = User.objects.get(userprofile__student_id=student_id)
+        except User.DoesNotExist:
+            continue  # Skip if no matching user
+
+        # Fetch health reports
+        health_reports = HealthReport.objects.filter(user=user).order_by('-created_at').values()
+
+        # Fetch medical history
+        try:
+            med = MedicalHistory.objects.get(user=user)
+            medical_history_data = {
+                'dob': med.dob,
+                'sex': med.sex,
+                'allergies': med.allergies,
+                'other_issues': med.other_issues,
+                'insurance': med.insurance,
+                'insurance_start': med.insurance_start,
+                'insurance_end': med.insurance_end,
+            }
+        except MedicalHistory.DoesNotExist:
+            medical_history_data = {}
+
+        results.append({
+            'studentID': student_id,
+            'batch': batch,
+            'full_name': f"{user.first_name} {user.last_name}",
+            'health_reports': list(health_reports),
+            'medical_history': medical_history_data,
+        })
+
+    return JsonResponse({'results': results})
+
+    
+
+def save_nurse_comment(request, report_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            comment = data.get('nurse_comment', '')
+            report = HealthReport.objects.get(id=report_id)
+            report.nurse_comment = comment
+            report.save()
+            return JsonResponse({'status': 'success'})
+        except HealthReport.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Report not found'}, status=404)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+def admin_report_detail(request, report_id):
+    report = get_object_or_404(HealthReport, id=report_id)
+    return render(request, 'main/admin_comp/admin_dtld_window.html', {'report': report})
+
+@login_required
+@user_passes_test(is_admin)
+def admin_dtld_window(request, report_id):
+    report = get_object_or_404(HealthReport, id=report_id)
+    context = {
+        'report': report,
+        'nurse_announcements': NurseAnnouncement.objects.order_by('-created_at'),
+        'office_status': cache.get('nurse_status', 'closed'),
+        'is_admin': True
+    }
+    return render(request, 'main/admin_comp/admin_dtld_window.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def toggle_star(request, report_id):
+    try:
+        report = get_object_or_404(HealthReport, id=report_id)
+        report.starred = not report.starred
+        report.save()
+        return JsonResponse({'status': 'success', 'starred': report.starred})
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+
+
+from django.http import JsonResponse
+
+def upload_medical_history(request):
+    if request.method == 'POST':
+        print("HIT VIEW: POST")
+
+        user = request.user
+
+        # Get values from POST
+        dob = request.POST.get('dob')
+        sex = request.POST.get('sex')
+        allergies = request.POST.get('allergies')
+        other_issues = request.POST.get('otherIssues')
+        insurance = request.POST.get('insurance')
+        insurance_start = request.POST.get('insuranceStart')
+        insurance_end = request.POST.get('insuranceEnd')
+
+        # New fields
+        emergency_name = request.POST.get('emergency_name')
+        emergency_relationship = request.POST.get('emergency_relationship')
+        emergency_phone = request.POST.get('emergency_phone')
+
+        clinic_name = request.POST.get('clinic_name')
+        doctor_name = request.POST.get('doctor_name')
+        clinic_phone = request.POST.get('clinic_phone')
+        clinic_address = request.POST.get('clinic_address')
+        clinic_reason = request.POST.get('clinic_reason')
+
+        # Debug output
+        print("DOB:", dob)
+        print("Sex:", sex)
+
+        # Save to model
+        medical_history, created = MedicalHistory.objects.get_or_create(user=user)
+        medical_history.dob = dob or None
+        medical_history.sex = sex or ""
+        medical_history.allergies = allergies or ""
+        medical_history.other_issues = other_issues or ""
+        medical_history.insurance = insurance or ""
+        medical_history.insurance_start = insurance_start or None
+        medical_history.insurance_end = insurance_end or None
+
+        # Save new fields
+        medical_history.emergency_name = emergency_name or ""
+        medical_history.emergency_relationship = emergency_relationship or ""
+        medical_history.emergency_phone = emergency_phone or ""
+
+        medical_history.clinic_name = clinic_name or ""
+        medical_history.doctor_name = doctor_name or ""
+        medical_history.clinic_phone = clinic_phone or ""
+        medical_history.clinic_address = clinic_address or ""
+        medical_history.clinic_reason = clinic_reason or ""
+
+        
+
+        medical_history.save()
+        print("Saved object:", vars(medical_history))
+
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': True})
+
+def medical_history_page(request):
+    user = request.user
+    medical_history, created = MedicalHistory.objects.get_or_create(user=user)
+
+    return render(request, 'med_his_std.html', {
+        'medical_history': medical_history,
+        'surgeries':medical_history.surgeries.all()
+    })
+
