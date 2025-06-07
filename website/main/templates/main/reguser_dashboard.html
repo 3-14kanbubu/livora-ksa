@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Livora{% endblock %}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f9f9ff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        header {
+            background-color: #e6e6faff;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .student-info {
+            font-weight: bold;
+            color: #4a86e8;
+            font-size: 16px;
+        }
+        
+        .header-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .livora-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            color: rgb(39, 34, 109);
+        }
+        
+        .header-divider {
+            font-size: 24px;
+            color: rgb(39, 34, 109);
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logout-btn {
+            background-color: #d2c3f3;
+            border: none;
+            padding: 5px 15px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            color: black;
+        }
+        
+        .container-fluid {
+            padding: 20px;
+            margin-top: 60px; /* This accounts for the fixed header height */
+        }
+        
+        .row {
+            margin: 0;
+        }
+          /* Left panel (symptom section) */
+        .left-panel {
+            background-color: #ebe6f9;
+            padding: 20px;
+            height: calc(100vh - 115px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-radius: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-left: 15px;
+            width: 320px;
+            position: fixed;
+            top: 80px; /* Position below the fixed header */
+        }
+        
+        .left-panel h6 {
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            color: rgb(46, 45, 45);
+            margin-bottom: 20px;
+        }
+        
+        .symptom-container {
+            width: 100%;
+            height: auto;
+            overflow: hidden;
+        }
+        
+        /* Right panel (content area) */
+        .content-panel {
+            margin-left: 350px;
+            padding: 0 20px;
+            width: calc(100% - 370px);
+        }
+        
+        .tab-menu {
+            background-color: #f0f0ff;
+            padding: 10px 20px;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            display: flex;
+            width: 100%;
+        }
+        
+        .tab-menu a {
+            flex: 1;
+            text-align: center;
+            margin-right: 0;
+            color: black;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-menu a.active {
+            color: #4a86e8;
+            background-color: rgba(74, 134, 232, 0.1);
+            font-weight: bold;
+        }
+        
+        .tab-menu a:hover:not(.active) {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .main-area {
+            background-color: #f4f2fb;
+            height: calc(100vh - 170px);
+            border-radius: 0 0 15px 15px;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .symptom-box {
+            background-color: white;
+            padding: 20px;
+            width: 100%;
+            max-width: 300px;
+            border-radius: 20px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0);
+            {% comment %} margin-top: 30px; {% endcomment %}
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="student-info">
+            {{user.first_name}} {{ user.last_name }}<br>
+            {{ student_id }} {{ student_name }}
+        </div>
+        <div class="header-center">
+            <span class="livora-title">LIVORA</span>
+            <span class="header-divider">|</span>
+            <a href="https://ksa.hs.kr/">
+                <img src="{% static 'photos/ksa_logo.png' %}" alt="KSA Logo" style="height: 40px;">
+            </a>
+        </div>
+
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" 
+            class="logout-btn" 
+            style="color: rgb(39, 34, 109);">log out</button>
+        </form>
+    </header>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Panel -->
+            <div class="left-panel">
+                <div class="symptom-container" id="symptom-component">
+                    <!--symptoms.html -->
+                    <div class="symptom-box">  
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="content-panel">
+                <div class="tab-menu">
+                    <a href="#" class="active" id="main-tab" onclick="changeTab('main')">Main Page</a>
+                    <a href="#" id="medical-tab" onclick="changeTab('medical')">Medical History</a>
+                    <a href="#" id="history-tab" onclick="changeTab('history')">Request History</a>
+                </div>
+
+                <div class="main-area" id="main-area">
+                    <!-- Dynamic loading -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% comment %} <script>
+        function loadComponent() {
+            fetch("{% url 'ruser_comp' 'symp_std' %}")
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById(`symptom-component`).innerHTML = html;
+                });
+        } {% endcomment %}
+
+
+   <script>
+       // Tab switching
+       function changeTab(tab) {
+           const tabMap = {
+               'main': 'main_std',
+               'medical': 'med_his_std',
+               'history': 'rqst_his_std'
+           };
+
+
+           const component = tabMap[tab];
+           if (!component) return;
+
+
+           document.querySelectorAll('.tab-menu a').forEach(link => {
+               link.classList.remove('active');
+
+
+           });
+           document.getElementById(`${tab}-tab`).classList.add('active');
+
+
+           fetch(`/ruser-comp/${component}`)
+               .then(response => response.text())
+               .then(html => {
+                   document.getElementById('main-area').innerHTML = html;
+                    fetch(`/ruser-comp/${component}`)
+                        .then(response => response.text())
+                        .then(html => {
+                            const container = document.getElementById('main-area');
+                            container.innerHTML = html;
+                            const scripts = container.getElementsByTagName('script');
+                            Array.from(scripts).forEach(oldScript => {
+                                const newScript = document.createElement('script');
+                                Array.from(oldScript.attributes).forEach(attr => {
+                                    newScript.setAttribute(attr.name, attr.value);
+                                });
+                                newScript.textContent = oldScript.textContent;
+                                oldScript.parentNode.replaceChild(newScript, oldScript);
+                            });
+
+                            if (component === 'med_his_std') {
+                                initializeMedicalHistoryForm();
+                            }
+                        });
+
+               });
+           }
+          
+           window.onload = () => changeTab('main');      
+   </script>
+
+    <script>        function loadSymptomComponent() {
+            fetch("{% url 'ruser_comp' 'symp_std' %}")
+                .then(response => response.text())
+                .then(html => {
+                    const container = document.getElementById('symptom-component');
+                    container.innerHTML = html;
+                    const scripts = container.getElementsByTagName('script');
+                    Array.from(scripts).forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+                        newScript.textContent = oldScript.textContent;
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+
+                    document.getElementById('minus-btn').addEventListener('click', () => {
+                        let input = document.getElementById('duration');
+                        if (parseInt(input.value)>0) {
+                            input.value = parseInt(input.value)-1;
+                        }
+                    });
+                    document.getElementById('plus-btn').addEventListener('click', () => {
+                        let input = document.getElementById('duration');
+                        input.value = parseInt(input.value)+1;
+                    });
+                    
+                });
+        }
+
+        window.onload = () => {
+            loadSymptomComponent(); // load left panel
+            changeTab('main');      // load right panel
+        };
+    </script>
+
+    <script>
+        const selectedHints = [];
+
+        function toggleHint(button, hint) {
+            const index = selectedHints.indexOf(hint);
+
+             if (index === -1) {
+                selectedHints.push(hint);
+                button.classList.add('selected');
+            } else {
+                selectedHints.splice(index, 1);
+                button.classList.remove('selected');
+            }
+
+            updateSymptomTextarea();
+            updateSubmitButton();
+        }
+
+        function updateSymptomTextarea() {
+            const textarea = document.getElementById('symptom_textarea');
+            if (selectedHints.length === 0) {
+            textarea.value = '';
+            return;
+            }
+
+            const sentence = selectedHints
+            .map((s, i) => i === 0 ? capitalize(s) : s.toLowerCase())
+            .join(', ');
+
+            textarea.value = sentence;
+        }
+
+        function capitalize(word) {
+            return word.charAt(0).toUpperCase() + word.slice(1);
+        }
+
+        function updateSubmitButton() {
+            const sendBtn = document.getElementById('sendBtn');
+            const symptomText = document.getElementById('symptom_textarea');
+            if (!sendBtn || !symptomText) return;
+
+            const hasSymptoms = symptomText.value.trim() !== '';
+            sendBtn.disabled = !hasSymptoms;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const textarea = document.getElementById('symptom_textarea');
+            const comments = document.getElementById('extra_comments');
+
+            if (textarea) {
+                textarea.addEventListener('input', updateSubmitButton);
+            }
+
+            if (comments) {
+                comments.addEventListener('input', updateSubmitButton);
+            }
+            updateSubmitButton(); // Disable/enable button on load
+        });
+    </script>
+</body>
+</html>

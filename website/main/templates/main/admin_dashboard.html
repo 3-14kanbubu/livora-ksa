@@ -1,0 +1,338 @@
+{% comment %} {% extends 'base_generic.html' %} {% endcomment %}
+{% load static %}
+
+{% comment %} {% block title %}Admin Dashboard - Welcome to Livora{% endblock %} {% endcomment %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Livora</title>
+    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+    <style>
+        body {
+            background-color: #f9f9ff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #e6e6faff;
+            padding: 22px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .student-info {
+            font-weight: bold;
+            color: #4a86e8;
+            font-size: 18px;
+        }
+
+        .header-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .livora-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            color: rgb(39, 34, 109);
+        }
+
+        .header-divider {
+            font-size: 24px;
+            color: rgb(39, 34, 109);
+        }
+
+        .logout-btn {
+            background-color: #d2c3f3;
+            border: none;
+            padding: 5px 15px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            color: rgb(39, 34, 109);
+        }
+
+        .container-fluid {
+            padding: 20px;
+            align-items: flex-start;
+            display: flex;
+            margin-top: 84px; /* This accounts for the fixed header height */
+            {% comment %} justify-content: center; {% endcomment %}
+            {% comment %} align-items: flex-start; /* horizontal */
+            justify-content: center; {% endcomment %}
+            {% comment %} height: 100vh;  {% endcomment %}
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            height-100vh;
+        }
+
+          .announcements {
+            background-color: #fff7e6;
+            padding: 15px;
+            border-left: 5px solid #ffcc00;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            font-family: 'SteelfishRg', sans-serif;
+        }
+
+        .left-panel {
+            {% comment %} background-color:rgb(39, 34, 109); {% endcomment %}
+            padding: 20px;
+            height: 150px;
+            display: flex;
+            {% comment %} height: calc(100vh - 115px); {% endcomment %}
+            flex-direction: column;
+            align-items: center;
+            {% comment %} border-radius: 30px; {% endcomment %}
+            margin-left: 15px;
+            margin-top: 15px;
+            width: 180px;
+            flex-shrink: 0;
+            {% comment %} positnkion: relative; {% endcomment %}
+        }
+
+        {% comment %} .left-panel h6 {
+            font-size: 16px;
+            text-align: center; {% endcomment %}
+            {% comment %} font-weight: 600; {% endcomment %}
+            
+            {% comment %} margin-bottom: 20px; {% endcomment %}
+            {% comment %} color: #353794; {% endcomment %}
+            {% comment %} text-align: center;
+        } {% endcomment %}
+
+
+        .row {
+            display: flex;
+            align-items: flex-start; 
+        }
+
+        .content-panel {
+            margin-left: 20px;
+            padding: 0 20px;
+            width: 950px;
+            margin-right: 25px;
+            height: calc(100vh-220px);
+        }
+
+        .tab-menu {
+            background-color: #f0f0ff;
+            padding: 10px 20px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            font-weight: bold;
+        }
+
+        .tab-menu a {
+            flex: 1;
+            text-align: center;
+            text-decoration: none;
+            padding: 10px 10px;
+            border-radius: 5px;
+            color: black;
+            transition: all 0.3s ease;
+        }
+
+        .tab-menu a.active {
+            color: #4a86e8;
+            background-color: rgba(74, 134, 232, 0.1);
+            font-weight: bold;
+            border-bottom: 3px solid #4a86e8;
+        }        .tab-menu a:hover:not(.active) {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .main-area {
+            background-color: #f4f2fb;
+            height: calc(100vh - 240px); /* Decreased height */
+            border-radius: 0 0 15px 15px;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-office-status .nurse-status-btn {
+            font-size: 20px;
+            padding: 14px 28px;
+            width: 150px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <header>
+        {% comment %} <div class="student-info">{{ student_id }} {{ student_name }}</div> {% endcomment %}
+        <div class="header-center">
+            <span class="livora-title">LIVORA</span>
+            <span class="header-divider">|</span>
+            <a href="https://ksa.hs.kr/">
+                <img src="{% static 'photos/ksa_logo.png' %}" alt="KSA Logo" style="height: 40px;">
+            </a>
+        </div>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" 
+            class="logout-btn">Log out</button>
+        </form>
+    </header>
+
+    <div class="container-fluid">
+        <div class="row" >
+            <!-- Left side -->
+            <!--admin_dashboard.html -->
+            <div class="left-panel" style="margin-top: 100px;">
+                <div 
+                style="display: flex; 
+                justify-content: center; 
+                flex-direction: column;
+                align-items: left;
+                {% comment %} margin-bottom: 20px; {% endcomment %}
+                ">
+                    <p style="
+                        text-align: left; 
+                        color: #353794 !important;
+                        font-weight: bold;
+                        font-size: 17px;
+                        font-family: 'BEBAS NEUE', sans-serif;
+                        margin: 0;
+                        padding: 0;
+                    ">
+                    NURSE OFFICE
+                    </p>                    <div class="admin-office-status" style="margin-top: 5px;">
+                        {% include 'components/office_status.html' with is_admin=True %}
+                    </div>
+                </div>
+            </div>
+           
+
+            <!-- Right Panel -->
+            <div class="content-panel">                <div class="tab-menu">
+                    <a href="#" class="active" id="main-tab" onclick="changeTab('main')">Main Page</a>
+                    {% comment %} <a href="#" id="medical-tab" onclick="changeTab('medical')">Medical History</a> {% endcomment %}
+                    <a href="#" id="history-tab" onclick="changeTab('history')">Request History</a>
+                    {% comment %} <a href="#" id="stdinfo-tab" onclick="changeTab('stdinfo')">Student Info</a> {% endcomment %}
+                </div><!-- Hidden div to store original main content -->
+                <div id="original-main-content" style="display: none;">
+                    <div class="announcements">
+                        <h4 style="font-weight: bold;">This Week's Announcements:</h4>
+                        <form method="post" style="margin-bottom: 20px;">
+                            {% csrf_token %}
+                            <textarea name="note" rows="3" placeholder="새 공지사항을 입력하세요" required                            style="width: calc(100% - 20px); resize: none; 
+                                padding: 10px; font-size: 14px; 
+                                border-radius: 5px; border: 1px solid #ccc;"></textarea>
+                            <button type="submit" name="add_note" 
+                            style="background-color:rgb(51, 132, 55); color: white; font-weight: bold; border: none; padding: 3px 7px; border-radius: 5px;
+                            ">공지 추가</button>
+                        </form>
+
+                        {% if nurse_announcements %}
+                            <ul>
+                            {% for note in nurse_announcements %}
+                                <li style="font-size: 14px;">
+                                    {{ note.message }}
+                                    <form method="post" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="delete_note" value="{{ note.id }}">
+                                        <button type="submit" 
+                                        style="background-color: #dc3545; 
+                                        color: white; font-weight: bold; 
+                                        border: none; padding: 3px 7px; 
+                                        border-radius: 5px;">삭제</button>
+                                    </form>
+                                </li>
+                            {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>No new announcements from the nurse this week.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="main-area" id="main-area">
+                    <!--Dynamic Loading-->
+                    <div class="announcements">
+                        <h4 style="font-weight: bold;">This Week's Announcements:</h4>
+
+                            <form method="post" style="margin-bottom: 20px;">
+                                {% csrf_token %}                            <textarea name="note" rows="5" placeholder="새 공지사항을 입력하세요" required 
+                                style="width: calc(100% - 20px); resize: vertical; min-height: 100px; padding: 10px; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; line-height: 1.5;"></textarea>
+                                <button type="submit" name="add_note" 
+                                style="background-color:rgb(51, 132, 55); color: white; font-weight: bold; border: none; padding: 3px 7px; border-radius: 5px;
+                                ">공지 추가</button>
+                            </form> 
+                            {% if nurse_announcements %}
+                                <ul style="list-style-type: none; padding: 0;">
+                                {% for note in nurse_announcements %}                                    <li style="margin-bottom: 15px; background-color: rgba(255, 255, 255, 0.5); padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: flex-start;">
+                                        <span style="flex-grow: 1; white-space: pre-line;">{{ note.message }}</span>
+                                        <form method="post" style="display:inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="delete_note" value="{{ note.id }}">
+                                            <button type="submit" style="background-color: #dc3545; color: white; font-weight: bold; border: none; padding: 3px 7px; border-radius: 5px;
+                                            ">삭제</button>
+                                        </form>
+                                    </li>
+                                {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p>No new announcements from the nurse this week.</p>
+                            {% endif %}
+                        </div>
+
+                </div>
+            </div>
+        </div>
+    </div>    <script>
+
+    function changeTab(tab) {
+        document.querySelectorAll('.tab-menu a').forEach(link => link.classList.remove('active'));
+        document.getElementById(`${tab}-tab`).classList.add('active');
+
+        if (tab === 'main') {
+            document.getElementById('main-area').innerHTML = document.getElementById('original-main-content').innerHTML;
+        } else {
+            fetch(`/admin-comp/admin_${tab}`)
+                 .then(response => {
+                    if (!response.ok) throw new Error("Failed to load tab content.");
+                    return response.text();
+                })
+                .then(html => {
+                    document.getElementById('main-area').innerHTML = html;
+                })
+                .catch(error => {
+                   console.error("Tab load error:", error);
+                    document.getElementById('main-area').innerHTML = "<p>Error loading content.</p>";
+                });
+        }
+    }        window.onload = () => {
+        const mainArea = document.getElementById('main-area');
+        document.getElementById('original-main-content').innerHTML = mainArea.innerHTML;
+        
+        loadSymptomComponent();
+        changeTab('main');
+    };
+    </script>
+</body>
+</html>
+{% endblock %}

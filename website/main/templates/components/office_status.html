@@ -1,0 +1,178 @@
+{% load static %}
+<div 
+class="nurse-status-container" 
+id="nurseStatusContainer">
+    <button 
+        class="nurse-status-btn {% if is_admin %}admin{% endif %}" 
+        id="nurseStatusBtn"
+        data-status="loading"
+        {% if not is_admin %}disabled{% endif %}
+    >
+        <span class="loading-dots">Loading...</span>
+    </button>
+
+    {% if is_admin %}
+        <p style="
+            text-align: left; 
+            margin-top: 10px;
+            color: #353794 !important;
+            font-weight: bold;
+            font-size: 14px;
+            font-family: 'BEBAS NEUE', sans-serif;
+            margin-bottom: 0;
+        ">
+            PLEASE, CLICK WHEN YOU ARE <span id="officeStatusText"><span class="loading-dots">Checking status...</span></span>
+        </p>
+    {% endif %}
+</div>
+
+<style>
+    .nurse-status-btn {
+        font-family: Georgia, serif;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: none;
+        width: 120px;
+        text-align: center;
+    }
+    
+    .nurse-status-btn[data-status="open"] {
+        background-color: #4CAF50; /* Green */
+    }
+    
+    .nurse-status-btn[data-status="closed"] {
+        background-color: #ff0000ff; /* Red */
+    }
+
+    .nurse-status-btn[data-status="loading"] {
+        background-color: #808080; /* Gray */
+        animation: pulse 1.5s infinite;
+    }
+    
+    .nurse-status-btn.admin:hover {
+        opacity: 0.9;
+        transform: scale(1.02);
+    }
+    
+    .nurse-status-btn:disabled {
+        cursor: not-allowed;
+        opacity: 1;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+
+    .loading-dots:after {
+        content: '.';
+        animation: dots 1.5s steps(5, end) infinite;
+    }
+
+    @keyframes dots {
+        0%, 20% { content: '.'; }
+        40% { content: '..'; }
+        60% { content: '...'; }
+        80%, 100% { content: ''; }
+    }
+</style>
+
+<script>
+(function initStatusComponent() {
+    const btn = document.getElementById('nurseStatusBtn');
+    const statusText = document.getElementById('officeStatusText');
+    const isAdmin = btn.classList.contains('admin');
+    if (window._statusInterval) {
+        clearInterval(window._statusInterval);
+        window._statusInterval = null;
+    }
+
+    function updateStatusText(status) {
+        if (statusText && isAdmin) {
+            if (status === 'loading') {
+                statusText.innerHTML = '<span class="loading-dots">Checking status...</span>';
+            } else {
+                statusText.textContent = status === 'open' ? 'LEAVING' : 'AT THE OFFICE';
+            }
+        }
+    }
+
+    function updateButtonStatus(status) {
+        btn.setAttribute('data-status', status);
+        btn.innerHTML = status === 'loading' ? 
+            '<span class="loading-dots">Loading...</span>' : 
+            status.toUpperCase();
+        updateStatusText(status);
+    }
+
+    //load_state
+    updateButtonStatus('loading');
+
+    if (isAdmin) {
+        btn.addEventListener('click', function() {
+            const currentStatus = this.getAttribute('data-status');
+            if (currentStatus === 'loading') return; // Prevent clicks during loading
+            
+            const newStatus = currentStatus === 'open' ? 'closed' : 'open';
+            updateButtonStatus(newStatus);
+
+            // Get CSRF token from cookie
+            const csrftoken = document.cookie.split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+
+            fetch('/update-nurse-status/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken || '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.success) {
+                    updateButtonStatus(currentStatus);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                updateButtonStatus(currentStatus);
+            });
+        });
+    }
+
+    function checkStatusUpdate() {
+        fetch('/get-nurse-status/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'open' || data.status === 'closed') {
+                if (btn.getAttribute('data-status') !== data.status) {
+                    updateButtonStatus(data.status);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching status:', error);
+        });
+    }
+
+    // Initial status check
+    checkStatusUpdate();
+    
+    // Only set up polling if not admin
+    if (!isAdmin) {
+        window._statusInterval = setInterval(checkStatusUpdate, 5000);
+    }
+})();
+</script>

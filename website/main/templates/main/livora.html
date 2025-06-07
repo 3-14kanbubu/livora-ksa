@@ -1,0 +1,178 @@
+<head>
+    <meta charset="UTF-8">
+    <title>Livora</title>
+        <style>
+            body {
+                background-color: #ded6eb;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+          
+            .modular-container {
+                text-align: center;
+            }
+        
+            .modular-box {
+                background-color: white;
+                padding: 20px 40px 10px;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                width: 250px;
+                margin-bottom: 20px;
+            }
+            
+            .modular-box.register-mode {
+                width: 600px;
+            }
+        
+            h1 {
+                color: #3f318d;
+                font-size: 48px;
+                display: block;
+                margin-bottom: 0;
+                text-align: center;
+            }
+        
+            h3 {
+                color: #3f318d;
+                margin-top: 8px;
+                margin-bottom: 30px;
+                text-align: center;
+            }
+
+            .invisible-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background-color: transparent; 
+            color:  #3f318d;
+            {% comment %} font-family: Steelfishrg, arvo; {% endcomment %}
+            {% comment %} font-size: 14px; {% endcomment %}
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+            .footer-section {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                gap: 8px;
+            }
+
+            /*school web link */
+            .footer-section:first-child {
+                font-family: 'SteelfishRg', sans-serif;
+                font-size: 16px;
+                font-weight: bold;
+                line-height: 1.2;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                gap: 12px;
+            }
+
+            /* surot */
+            .footer-section:first-child img 
+            {
+                height: 60px; 
+                margin-top: 0;
+            }
+
+            .footer-section:nth-child(2) {
+                font-family: 'Avro', serif;
+                font-size: 14
+            }
+
+            .no-style-link {
+                text-decoration: none;
+                color: inherit;
+            }
+
+        
+        </style>
+
+        
+
+{% block content %}
+<div class="login-container">
+    <h1>Livora</h1>
+    <h3>KSA Healthcare System</h3>
+
+    <div class="modular-box">
+        <div id ="dynamic-box-content">
+            {% comment %} <p> Loading... </p> {% endcomment %}
+        </div>
+    </div> 
+</div>
+
+<script>
+   function loadBoxContent (url) {
+       fetch(url)
+           .then(response => response.text())
+           .then(html => {
+               const modularBox = document.querySelector('.modular-box');
+               modularBox.classList.remove('register-mode');
+               if (url === '/register-box/') {
+                   modularBox.classList.add('register-mode');
+               }
+               document.getElementById('dynamic-box-content').innerHTML = html;
+           })
+           .catch(error => {
+               document.getElementById('dynamic-box-content').innerHTML = '<p>Error loading content.</p>';
+               console.error(error);
+           });
+   }
+
+
+   window.onload = function() {
+       loadBoxContent('/login-box/');
+   };
+</script>
+{% endblock %}
+
+{% load static %}
+<footer class="invisible-footer">
+    <div class="footer-section">
+        <div style ="display: flex; flex-direction: column;">
+        {% comment %} <div style="display: flex; flex-direction: column; text-align: right;"> {% endcomment %}
+            <a href="https://ksa.hs.kr/" 
+            class="no-style-link">
+            <div> SCHOOL </div>
+            <div> WEBSITE </div>
+            </a>
+        </div>
+        <a href="https://ksa.hs.kr/">
+        <img src = "{% static 'photos/hanbomi.png' %}" alt="KSA baby">
+        </a>
+    </div>
+    <div class="footer-section">
+        <div style = "display: flex; flex-direction: column;">
+            <div style = "font-weight: bold;"> 
+                <div> Problems with site? Contact: </div>
+            </div>
+            <div> Alejandra.E.A. 23-202@ksa.hs.kr </div>
+            <div> Kanbubu.S.k.   23-208@ksa.hs.kr </div>
+        </div>
+    </div>
+    <div class="footer-section" style="flex-direction: row; justify-content: center; align-items: center; gap: 12px;">
+        <a href="#" class="no-style-link">
+            <div style="font-weight: bold; text-align: center;">
+                <div>NURSE</div>
+                <div>OFFICE</div>
+            </div>
+        </a>
+        <div>
+            {% include "components/office_status.html" with is_admin=False %}
+        </div>
+    </div>
+</footer>

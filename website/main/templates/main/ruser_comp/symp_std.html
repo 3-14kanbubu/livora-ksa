@@ -1,0 +1,211 @@
+<h6>How are you feeling?<br>Send your symptoms to the nurse</h6>
+<form method="POST" action="{% url 'submit_health_report' %}" enctype="multipart/form-data" id="symptomForm">
+    {% csrf_token %}
+    <label>Symptom(s):</label>
+    <input type="text" id="symptom_textarea" class="form-control" rows="2" name="symptoms" style="font-size: 14px;">
+
+
+    <div class="hints-buttons">
+        <button type="button" class="hint-btn" onclick="toggleHint(this, 'Headache')">Headache</button>
+        <button type="button" class="hint-btn" onclick="toggleHint(this,'Fever')">Fever</button>
+        <button type="button" class="hint-btn" onclick="toggleHint(this,'Cough')">Cough</button>
+        <button type="button" class="hint-btn" onclick="toggleHint(this,'Sore throat')">Sore throat</button>
+        <button type="button" class="hint-btn" onclick="toggleHint(this,'Runny/Stuffy Nose')">Runny/Stuffy Nose</button>
+        <button type="button" class="hint-btn" onclick="toggleHint(this,'Fatigue')">Fatigue</button>
+        <button type="button" class="hint-btn" onclick="toggleHint(this,'Muscle Ache')">Muscle Ache</button>
+        <button type="button" class="hint-btn" onclick="toggleHint(this,'Numbness')">Numbness</button>
+        <button type="button" class="hint-btn" onclick="toggleHint(this,'Sleepiness')">Sleepiness</button>
+        <button type="button" class="hint-btn" onclick="toggleHint(this,'Nausea')">Nausea</button>
+        <button type="button" class="hint-btn" onclick="toggleHint(this,'Sweating')">Sweating</button>
+    </div>
+
+    <label>Extra Comments:</label>
+    <textarea id="extra_notes" name="extra_comments" class="form-control" rows="2" style="min-height: 40px; height: 60px; resize: none;"></textarea>
+
+    <label>Duration (days):</label>
+    <div class="duration-control">
+        <button type="button" id="minus-btn">-</button>
+        <input type="text" id="duration" value="0" name="duration" readonly>
+        <button type="button" id="plus-btn">+</button>
+        <span>DAYS</span>
+    </div>
+
+    <button class="submit-btn" id="sendBtn" type="submit" disabled>Send</button>
+</form>
+
+<style>
+ .symptom-report-module {
+   padding: 3px;
+   max-width: 500px;
+   margin: 0 auto;
+ }
+
+
+ .symptom-box {
+   margin-bottom: 20px;
+ }
+
+
+ .hint-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+   gap: 8px;
+   margin-top: 10px;
+ }
+
+.hint-btn {
+  margin: 3px;
+  padding: 4px 8px;
+  font-size: 12px;  /* smaller text */
+  border: 1px solid gray;
+  background-color: white;
+  color: gray;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.hint-btn.selected {
+  background-color: #007bff;
+  color: white;
+}
+
+.hint-item {
+  background-color: #e9ecef;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  text-align: center;
+}
+ 
+.hint-item.selected{
+ background-color: #4a86e8;
+ color:white;
+ font-weight:bold;
+}
+
+
+ .hint-item:hover {
+   background-color: #d1e7ff;
+ }
+
+
+ .form-control {
+   width: 100%;
+   padding: 8px;
+   margin: 8px 0;
+   border: 1px solid #ccc;
+   border-radius: 4px;
+   font-size: 14px;
+   box-sizing: border-box;
+ }
+
+
+ textarea.form-control {
+   min-height: 80px;
+   resize: vertical;
+ }
+
+
+ .duration-control {
+   margin: 10px 0;
+ }
+
+
+ .duration-control button {
+   width: 30px;
+   height: 30px;
+   background-color: #4a86e8;
+   color: white;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+ }
+
+
+ .duration-control input {
+   width: 50px;
+   text-align: center;
+   padding: 5px;
+
+
+ }
+
+
+ .submit-btn {
+   background-color: #4a86e8;
+   color: white;
+   border: none;
+   padding: 10px 20px;
+   border-radius: 5px;
+   cursor: pointer;
+   width: 100%;
+   transition: opacity 0.3s;
+ }
+
+ .submit-btn:disabled {
+  background-color: #4a86e8;
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+
+label{
+  font-weight: bold;
+}
+
+ textarea {
+   caret-color: #4a86e8; 
+ }
+</style>
+
+<script>
+  function toggleHint(button, symptom) {
+    const textarea = document.getElementById('symptom_textarea');
+    button.classList.toggle('selected');
+    
+    let symptoms = textarea.value ? textarea.value.split(', ').filter(s => s) : [];
+    
+    if (button.classList.contains('selected')) {
+      if (!symptoms.includes(symptom)) {
+        symptoms.push(symptom);
+      }
+    } else {
+      symptoms = symptoms.filter(s => s !== symptom);
+    }
+    
+    textarea.value = symptoms.join(', ');
+    document.getElementById('sendBtn').disabled = symptoms.length === 0;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const minusBtn = document.getElementById("minus-btn");
+    const plusBtn = document.getElementById("plus-btn");
+    const durationInput = document.getElementById("duration");
+
+    minusBtn.addEventListener("click", function() {
+      let value = parseInt(durationInput.value);
+      if (value > 0) {
+        durationInput.value = value - 1;
+      }
+    });
+
+    plusBtn.addEventListener("click", function() {
+      let value = parseInt(durationInput.value);
+      durationInput.value = value + 1;
+    });
+  });
+
+  //LOACLSTORAGE
+  document.getElementById('symptomForm').addEventListener('submit', function(e) {
+    const now = new Date();
+    const formattedTime = now.toLocaleString();
+    localStorage.setItem('submittedTime', formattedTime);
+    localStorage.setItem('symptoms', document.getElementById('symptom_textarea').value);
+    localStorage.setItem('extraNotes', document.getElementById('extra_notes').value || 'None');
+    localStorage.setItem('duration', document.getElementById('duration').value || '0');
+});
+</script>

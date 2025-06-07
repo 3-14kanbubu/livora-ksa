@@ -1,0 +1,90 @@
+<div class="content-box">
+  <!-- Nurse Info and Announcements -->
+  <div class="nurse-info">
+    <div 
+    style='font-size: 17px; 
+    font-weight: bold;
+    margin-bottom: 3.5px;
+    '>Nurse Information:
+  </div>
+    <div><strong>Name:</strong> {{ nurse_name}} Kim Soonja</div>
+    <div><strong>Contact:</strong> {{ nurse_contact}} 010-8132-8923</div>
+    <div><strong>Nurse office:</strong> 형1103</div>
+    <div><strong>Hours:</strong> 9:00 AM - 5:00 PM</div>
+  </div>
+
+  <div class="announcements">
+    <h6 style="font-weight: bold;">This Week's Announcements:</h6>    {% if nurse_announcements %}      <ul style="list-style-type: none; padding: 0;">
+        {% for note in nurse_announcements %}
+          <li style="margin-bottom: 15px; background-color: rgba(255, 255, 255, 0.5); padding: 12px; border-radius: 8px; display: flex;">
+            <span style="margin-right: 10px;">•</span>
+            <span style="white-space: pre-line;">{{ note.message }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No new announcements from the nurse this week.</p>
+    {% endif %}
+  </div>
+
+  <!-- Box Footer (right-aligned) -->
+  <div class="box-footer">
+    <div class="office-status-container">
+      <div class="office-label">
+        <div>NURSE</div>
+        <div>OFFICE</div>
+      </div>
+      {% include "components/office_status.html" with is_admin=False %}
+    </div>
+  </div>
+</div>
+
+<style>  .content-box {
+    background-color: white;
+    border-radius: 15px;
+    padding: 20px;
+    {% comment %} box-shadow: 0 4px 8px rgba(0,0,0,0.1); {% endcomment %}
+    position: relative; /* Needed for absolute positioning of footer */
+    min-height: 450px; /* Increased height to accommodate the status button */
+  }
+
+  .nurse-info {
+    background-color: #f4f2fb;
+    padding: 7px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: 'SteelfishRg', sans-serif;
+    margin-bottom: 20px;
+  }
+  .announcements {
+    background-color: #fff7e6;
+    padding: 15px;
+    border-left: 5px solid #ffcc00;
+    border-radius: 10px;
+    margin-bottom: 100px; /* Increased to make room for the status button */
+    font-family: 'SteelfishRg', sans-serif;
+  }
+
+  .box-footer {
+    position: absolute;
+    bottom: 25px;
+    right: 25px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 12px;
+    {% comment %} box-shadow: 0 2px 8px rgba(0,0,0,0.05); {% endcomment %}
+  }
+
+  .office-status-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .office-label {
+    text-align: center;
+    line-height: 1.2;
+    color: #3f318d;
+    font-weight: bold;
+  }
+</style>

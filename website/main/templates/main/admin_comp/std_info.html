@@ -1,0 +1,180 @@
+{% load static %}
+
+<div class="admin-content">
+  <!-- Header with Search Bar -->
+  <div class="header-section">
+    <h2 class="text-xl font-bold">학생 목록</h2>
+    <div class="search-container">
+      <input type="text" id="studentSearch" placeholder="Search by student ID or name...">
+      <button onclick="searchStudent()" class="search-btn">
+        Search
+      </button>
+    </div>
+  </div>
+
+  <!-- Student List -->
+  <div class="bg-white rounded-lg shadow-md p-4">
+    <div id="studentList" class="space-y-2">
+      <!-- Student entries will be populated here -->
+    </div>
+  </div>
+
+  <!-- Student Info Overlay -->
+  <div id="studentOverlay" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg p-6 max-w-2xl mx-auto mt-20">
+      <div class="flex justify-between items-center mb-4">
+        {% comment %} <h3 class="text-xl font-bold">Student Information</h3> {% endcomment %}
+        <button onclick="closeOverlay()" class="text-gray-500 hover:text-gray-700">
+          <span class="text-2xl">&times;</span>
+        </button>
+      </div>
+      <div id="studentDetails" class="space-y-4">
+        <!-- Student details will be populated here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.admin-content {
+  background-color: #f4f2fb;
+  border-radius: 15px;
+  padding: 20px;
+  margin: 20px;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+#studentSearch {
+  width: 250px;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.search-btn {
+  background-color: #6b5eb7;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-btn:hover {
+  background-color: #574b96;
+}
+
+#studentList .student-item {
+  padding: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#studentList .student-item:hover {
+  background-color: #edf2f7;
+}
+
+#studentOverlay {
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+}
+</style>
+
+<script>
+let studentData = [];
+
+async function fetchStudentData() {
+  try {
+    const response = await fetch('/api/students/', {
+      headers: {
+        'Authorization': 'Token 2def09-830850-ad42fe-9aa222-17ecea',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    studentData = data;
+    displayStudents(data);
+  } catch (error) {
+    console.error('Error fetching student data:', error);
+  }
+}
+
+function displayStudents(students) {
+  const studentList = document.getElementById('studentList');
+  studentList.innerHTML = students.map(student => `
+    <div class="student-item" onclick="showStudentDetails('${student.id}')">
+      <p class="font-medium">${student.name}</p>
+      <p class="text-sm text-gray-600">ID: ${student.id}</p>
+    </div>
+  `).join('');
+}
+
+function searchStudent() {
+  const searchTerm = document.getElementById('studentSearch').value.toLowerCase();
+  const filteredStudents = studentData.filter(student => 
+    student.id.toLowerCase().includes(searchTerm) || 
+    student.name.toLowerCase().includes(searchTerm)
+  );
+  displayStudents(filteredStudents);
+}
+
+async function showStudentDetails(studentId) {
+  try {
+    const response = await fetch(`/api/student/${studentId}/`);
+    const studentInfo = await response.json();
+    
+    document.getElementById('studentDetails').innerHTML = `
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h4 class="font-bold mb-2">Personal Information</h4>
+        <p><strong>ID:</strong> ${studentInfo.id}</p>
+        <p><strong>Name:</strong> ${studentInfo.name}</p>
+        <p><strong>Grade:</strong> ${studentInfo.grade}</p>
+      </div>
+      
+      <div class="mt-4">
+        <h4 class="font-bold mb-2">Medical History</h4>
+        <div class="space-y-2">
+          ${studentInfo.medicalHistory.map(record => `
+            <div class="bg-gray-50 p-3 rounded">
+              <p><strong>Date:</strong> ${record.date}</p>
+              <p><strong>Symptoms:</strong> ${record.symptoms}</p>
+              <p><strong>Notes:</strong> ${record.notes || 'None'}</p>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('studentOverlay').classList.remove('hidden');
+  } catch (error) {
+    console.error('Error fetching student details:', error);
+  }
+}
+
+function closeOverlay() {
+  document.getElementById('studentOverlay').classList.add('hidden');
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', fetchStudentData);
+</script>

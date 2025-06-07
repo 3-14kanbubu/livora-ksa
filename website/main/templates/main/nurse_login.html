@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>🎀 Livora Nurse 🎀</title>
+    <style>
+        body {
+            background-color: #f8dcd7ff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .form-input {
+            width: 70%;
+            padding: 6px 10px; /* Slightly reduced padding */
+            height: 32px; /* Decreased height */
+            margin-bottom: 0;
+            border: 1px solid #d8b5c6;
+            border-radius: 6px;
+            background-color: rgb(238, 229, 233);
+            box-sizing: border-box;
+        }
+
+        .login-container {
+            text-align: center;
+        }
+        .login-box {
+            background-color: white;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 250px;
+        }
+        h1 {
+            color: #3f318d;
+            font-size: 48px;
+            margin-bottom: 0;
+        }
+        h3 {
+            color: #3f318d;
+            margin-top: 8px;
+            margin-bottom: 30px;
+        }
+        label {
+            font-weight: bold;
+            color: #3f318d;
+            width: 100px;
+            text-align: right;
+            line-height: normal;
+            margin-right: 10px;
+            padding: 0;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 70%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #d8b5c6;
+            border-radius: 6px;
+            background-color: rgb(238, 229, 233);
+            height: 40px;
+        }
+
+        .btn-primary {
+            background-color: #8e7cc3ff;
+            color: yellow;
+            font-weight: bold;
+            border: none;
+            padding: 10px 20px;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        #login-error-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 999;
+            box-shadow: 0 8px 16px #980000;
+        }
+        .login-error-box {
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            background-color: #f5f5f5;
+            min-width: 300px;
+            padding-right: 15px;
+        }
+        .error-icon {
+            background-color: #ff0000ff;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .error-message {
+            background-color: #f5f5f5;
+            padding: 15px 10px;
+            font-family: Verdana;
+            font-size: 16px;
+            color: black;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            justify-content: space-between;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .form-input {
+            width: 70%;
+            padding: 8px;
+            height: 30px;
+            margin-bottom: 0; /* remove margin-bottom from input itself */
+        }
+
+        .error-ok-btn {
+            background-color: #ffecb3;
+            color: black;
+            font-family: Verdana;
+            font-weight: bold;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            margin-left: 10px;
+        }
+    </style>
+
+<div>
+    <div class="login-container">
+        <h1>Livora</h1>
+        <h3>KSA Healthcare System</h3>
+
+        <div class="login-box">
+            <form method="post" action="{% url 'nurse_login' %}">
+                {% csrf_token %}
+                {% if login_failed%}
+                <div id="login-error-overlay">
+                    <div class="login-error-box">
+                        <div class="error-icon">
+                            <div style="background-color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: #e53935;">!</div>
+                        </div>
+                        <div class="error-message">
+                            아이디 또는 비밀번호가 틀렸습니다
+                            <button 
+                                class="error-ok-btn" 
+                                onclick="document.getElementById('login-error-overlay').style.display='none'">
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="form-row">
+                    <label for="username">아이디</label>
+                    <input type="text" name="username" id="username" class="form-input" required>
+                </div>
+
+                <div class="form-row">
+                    <label for="password">비밀번호</label>
+                    <input type="password" name="password" id="password" class="form-input" required>
+                </div>
+
+                <button type="submit" class="btn-primary">로그인</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

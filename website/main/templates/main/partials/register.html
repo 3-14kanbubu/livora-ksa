@@ -1,0 +1,100 @@
+<style>    form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }    .form-row {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 5px;
+        position: relative;
+    }
+
+    .input-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    label {
+        font-weight: bold;
+        color: #3f318d;
+        font-size: 16px;
+    }    input {
+        width: 300px;
+        padding: 10px;
+        border: 1px solid #d8b5c6;
+        border-radius: 6px;
+        background-color: rgb(238, 229, 233);
+        height: 40px;
+    }
+
+    .help-text {
+        font-size: 12px;
+        color: #666;
+        margin-left: 15px;
+        max-width: 200px;
+        line-height: 1.4;
+    }    .register-btn {
+        background-color: #8e7cc3;
+        color: yellow;
+        font-weight: bold;
+        border: none;
+        padding: 10px 20px;
+        width: 100%;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
+        margin-top: 8px;
+    }
+
+    .login-link {
+        color: #3f318d;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .error-list {
+        color: #980000;
+        background-color: #ffecb3;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        list-style-type: none;
+    }
+</style>
+
+<form method="post">
+    {% csrf_token %}
+    {% if form.errors %}
+        <ul class="error-list">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    {% endif %}    <div class="form-row">
+        <label for="id_username">username</label>
+        <div class="input-container">
+            {{ form.username }}
+            <div class="help-text">Required. 150 characters or fewer.<br>Letters, digits and @/./-/_ only.</div>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <label for="id_password1">password</label>
+        <div class="input-container">
+            {{ form.password1 }}
+            <div class="help-text">It must contain at least 8 characters.<br>It can't be entirely numeric.</div>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <label for="id_password2">psw confirmation</label>
+        <div class="input-container">
+            {{ form.password2 }}
+            <div class="help-text">Enter the same password as before,<br>for verification.</div>
+        </div>
+    </div>    <button type="submit" class="register-btn">register</button>    <div style="text-align: center; margin-top: 3px; margin-bottom: 0; font-size: 14px; color: #353794;">already have an account? <a href="{% url 'login' %}" class="login-link">log in here</a></div>
+</form>
+

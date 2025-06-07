@@ -1,0 +1,272 @@
+<div id="medical-history-component" class="w-full max-w-6xl mx-auto p-8 mt-6 bg-white rounded-lg">
+
+    <!-- Global Edit Button -->
+    <div class="px-4 py-4">
+      <button type="button" id="editAllBtn" class="border px-3 py-1 rounded hover:bg-gray-200">Edit</button>
+
+      <form id="medicalForm" class="space-y-8 mt-6 mx-8">
+
+      <!-- Date of Birth -->
+      <div>
+        <label for="dob" class="block font-medium mb-1 py-4">Date of Birth:</label>
+        <input id="dob" type="date" class="w-full border rounded px-3 py-2" disabled />
+      </div>
+
+      <!--Sex-->
+        <div>
+          <label for="sex" class="block font-medium mb-1 " >Sex:</label>
+          <select id="sex" class="w-full border rounded px-3 py-2" disabled>
+            <option value="" disabled selected>Select</option>
+            <option value="male"> Male</option>
+            <option value="female"> Female</option>
+          </select>
+        </div>
+
+
+      <!-- Personal Health History -->
+      <div>
+        <h3 class="text-lg font-semibold mb-2" style="margin-top: 25px;">🩺 Personal Health History</h3>
+        <label for="certificateUpload" class="block font-medium mb-1 " style="margin-top: 10px;" >📎 Upload Certificate (optional):</label>
+        <input id="certificateUpload" type="file" accept=".pdf,.jpg,.png,.hwp" multiple class="w-full border rounded px-3 py-2" disabled />
+      </div>
+
+      <!--Allergies-->
+      <div>
+        <label for="allergies" class="block font-medium mb-1" style="margin-top: 25px;"> Allergies:</label>
+        <input type="text" id="allergies" class="w-full border rounded px-3 py-2" rows="2" placeholder="e.g: peanuts, pollen, etc." style="width: 300px;" disabled></input>
+      </div>
+
+
+      <!-- Other Medical Issues -->
+      <div>
+        <label for="otherIssues" class="block font-medium mb-1" style="margin-top: 25px;">💬 Other Medical Issues:</label>
+        <input type="text" id="otherIssues" class="w-full border rounded px-3 py-2" rows="3" disabled></input>
+      </div>
+
+      <!-- Surgeries/Procedures -->
+      <div>
+        <h3 class="text-lg font-semibold mb-2" style="margin-top: 25px;">✂️ Surgeries / Procedures</h3>
+        <div id="surgeryContainer" class="space-y-2">
+          <div class="grid grid-cols-3 gap-2">
+            <input type="text" placeholder="Procedure Name" class="border px-2 py-1 rounded" disabled />
+            <input type="date" class="border px-2 py-1 rounded" disabled />
+            <input type="text" placeholder="Notes" class="border px-2 py-1 rounded" disabled />
+          </div>
+        </div>
+        <button type="button" onclick="addSurgery()" class="text-blue-600 mt-2 hover:underline" disabled>➕ Add More</button>
+      </div>
+
+      <!--Emergency Contact Info-->
+      <div>
+      <h3 class="text-lg font-semibold mb-2" style="margin-top: 35px;">🚨 Emergency Contact</h3>
+        <input type="text" placeholder="Full Name" class="w-full mb-2 border px-3 py-2 rounded" disabled />
+        <input type="text" placeholder="Relationship (e.g., Parent, Guardian)" class="w-full mb-2 border px-3 py-2 rounded" disabled />
+        <input type="tel" placeholder="Phone Number" class="w-full mb-2 border px-3 py-2 rounded" disabled />
+      </div>
+
+      <!-- Constant Health Care Provider -->
+      <div>
+        <h3 class="text-lg font-semibold mb-2" style="margin-top: 25px;">🩻 Constant Health Care Provider</h3>
+        <input type="text" placeholder="Clinic/Hospital Name" class="w-full mb-2 border px-3 py-2 rounded" disabled />
+        <input type="text" placeholder="Doctor's Name" class="w-full mb-2 border px-3 py-2 rounded" disabled />
+        <input type="text" placeholder="Phone Number" class="w-full mb-2 border px-3 py-2 rounded" disabled />
+        <input type="text" placeholder="Address" class="w-full mb-2 border px-3 py-2 rounded" disabled></input>
+        <input type="text" placeholder="Reason for Visits / Ongoing Treatments" class="w-full border px-3 py-2 rounded" style="width: 400px;" disabled></input>
+      </div>
+
+      <!-- Insurance Info -->
+      <div>
+        <label class="block font-medium mb-1" style="margin-top: 25px;">Insurance:</label>
+        <input id="insurance" type="text" placeholder="Insurance name or 'None'" class="w-full border rounded px-3 py-2 mb-2 " style="width: 300px;" disabled />
+        <div class="space-y-1 mt-4">
+          <p style="font-weight: bold; font-color: #595959; ">Insurance Validity:</p>
+          <input id="insuranceStart" type="date" placeholder="Start Date" class="border rounded px-3 py-2" disabled />
+          <input id="insuranceEnd" type="date" placeholder="End Date" class="border rounded px-3 py-2" disabled />
+      </div>
+
+    </form>
+    </div>
+
+ </div>
+
+ <style>
+  #medical-history-component .hints-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  #medical-history-component .hint-btn {
+    margin: 3px;
+    padding: 4px 8px;
+    font-size: 12px;
+    border: 1px solid gray;
+    background-color: white;
+    color: gray;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  #medical-history-component .hint-btn.selected {
+    background-color: #007bff;
+    color: white;
+  }
+
+  #medical-history-component input,
+  #medical-history-component textarea,
+  #medical-history-component select {
+    font-size: inherit;
+  }
+
+  #medical-history-component .text-lg {
+    font-size: 1.125rem;
+  }
+
+  #medical-history-component label {
+    font-size: inherit;
+  }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const editAllBtn = document.getElementById("editAllBtn");
+
+  if (!editAllBtn) {
+    console.error("Edit button not found!");
+    return;
+  }
+
+  editAllBtn.addEventListener("click", () => {
+    console.log("Edit button clicked!");
+    if (editAllBtn.classList.contains("bg-blue-500")) {
+      editAllBtn.classList.remove("bg-blue-500", "text-white");
+      editAllBtn.classList.add("bg-gray-300", "text-black");
+      editAllBtn.textContent = "Edit";
+    } else {
+      editAllBtn.classList.remove("bg-gray-300", "text-black");
+      editAllBtn.classList.add("bg-blue-500", "text-white");
+      editAllBtn.textContent = "Save";
+    }
+  });
+});
+</script>
+
+<script>
+    function initializeMedicalHistoryForm() {
+        const editAllBtn = document.getElementById("editAllBtn");
+        const form = document.getElementById("medicalForm");
+        const healthList = document.getElementById("healthList");
+        let formEditing = false;
+
+        const fieldIds = [
+            "dob", 
+            "sex",
+            "certificateUpload",
+            "allergies",
+            "otherIssues",
+            "insurance",
+            "insuranceStart",
+            "insuranceEnd"
+        ];
+
+        // Save
+        fieldIds.forEach(id => {
+            const input = document.getElementById(id);
+            const saved = localStorage.getItem(id);
+            if (saved && input) {
+                if (input.type === 'file') {
+                    return;
+                }
+                input.value = saved;
+            }
+        });
+
+        // Surgery
+        const surgeryContainer = document.getElementById('surgeryContainer');
+        if (surgeryContainer) {
+            const savedSurgeries = localStorage.getItem('surgeries');
+            if (savedSurgeries) {
+                try {
+                    const surgeries = JSON.parse(savedSurgeries);
+                    surgeries.forEach((surgery, index) => {
+                        if (index > 0) {
+                            addSurgery();
+                        }
+                        const row = surgeryContainer.children[index];
+                        if (row) {
+                            const inputs = row.getElementsByTagName('input');
+                            inputs[0].value = surgery.name || '';
+                            inputs[1].value = surgery.date || '';
+                            inputs[2].value = surgery.notes || '';
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error restoring surgeries:', e);
+                }
+            }
+        }
+
+        if (form) {
+            form.querySelectorAll("input, textarea, select, button").forEach(el => {
+                if (el.id !== "editAllBtn") el.disabled = true;
+            });
+        }
+
+        if (editAllBtn) {
+            editAllBtn.addEventListener("click", () => {
+                formEditing = !formEditing;
+                editAllBtn.textContent = formEditing ? "Save" : "Edit";
+                editAllBtn.classList.toggle("bg-blue-500", formEditing);
+                editAllBtn.classList.toggle("text-white", formEditing);
+
+                if (form) {
+                    form.querySelectorAll("input, textarea, select, button").forEach(el => {
+                        if (el.id !== "editAllBtn") el.disabled = !formEditing;
+                    });
+                }
+
+                if (healthList) {
+                    healthList.classList.toggle("hidden", !formEditing);
+                }
+
+                if (!formEditing) {
+                    fieldIds.forEach(id => {
+                        const input = document.getElementById(id);
+                        if (input && input.type !== 'file') {
+                            localStorage.setItem(id, input.value);
+                        }
+                    });
+                    // Save surgeries
+                    const surgeryContainer= document.getElementById('surgeryContainer');
+                    if (surgeryContainer) {
+                        const surgeries=Array.from(surgeryContainer.children).map(row => {
+                            const inputs= row.getElementsByTagName('input');
+                            return {
+                                name: inputs[0].value,
+                                date: inputs[1].value,
+                                notes: inputs[2].value
+                            };
+                        });
+                        localStorage.setItem('surgeries', JSON.stringify(surgeries));
+                    }
+                }
+            });
+        }
+    }
+    function addSurgery() {
+        const container=document.getElementById('surgeryContainer');
+        if (!container) return;
+
+        const div=document.createElement('div');
+        div.className='grid grid-cols-3 gap-2 mt-2';
+        div.innerHTML= `
+            <input type="text" placeholder="Procedure Name" class="border px-2 py-1 rounded" />
+            <input type="date" class="border px-2 py-1 rounded" />
+            <input type="text" placeholder="Notes" class="border px-2 py-1 rounded" />
+        `;
+        container.appendChild(div);
+    }
+</script>
+
+</div>
