@@ -1,7 +1,5 @@
-{% comment %} {% extends 'base_generic.html' %} {% endcomment %}
 {% load static %}
 
-{% comment %} {% block title %}Admin Dashboard - Welcome to Livora{% endblock %} {% endcomment %}
 
 {% block content %}
 <!DOCTYPE html>
@@ -10,7 +8,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard - Livora</title>
-    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
     <style>
         body {
             background-color: #f9f9ff;
@@ -20,7 +17,7 @@
         }
 
         header {
-            background-color: #e6e6faff;
+            background-color:#f8dcd7ff;
             padding: 22px 20px;
             display: flex;
             justify-content: space-between;
@@ -61,24 +58,20 @@
         }
 
         .logout-btn {
-            background-color: #d2c3f3;
+            background-color:rgb(240, 180, 170);
             border: none;
             padding: 5px 15px;
             font-weight: bold;
             border-radius: 5px;
             cursor: pointer;
-            color: rgb(39, 34, 109);
+            color: rgb(0, 0, 0);
         }
 
         .container-fluid {
             padding: 20px;
             align-items: flex-start;
             display: flex;
-            margin-top: 84px; /* This accounts for the fixed header height */
-            {% comment %} justify-content: center; {% endcomment %}
-            {% comment %} align-items: flex-start; /* horizontal */
-            justify-content: center; {% endcomment %}
-            {% comment %} height: 100vh;  {% endcomment %}
+            margin-top: 74px; 
         }
 
         .row {
@@ -88,7 +81,7 @@
         }
 
           .announcements {
-            background-color: #fff7e6;
+            background-color: #ffffff;
             padding: 15px;
             border-left: 5px solid #ffcc00;
             border-radius: 10px;
@@ -97,30 +90,21 @@
         }
 
         .left-panel {
-            {% comment %} background-color:rgb(39, 34, 109); {% endcomment %}
+            
             padding: 20px;
             height: 150px;
             display: flex;
-            {% comment %} height: calc(100vh - 115px); {% endcomment %}
+    
             flex-direction: column;
             align-items: center;
-            {% comment %} border-radius: 30px; {% endcomment %}
+           
             margin-left: 15px;
             margin-top: 15px;
             width: 180px;
             flex-shrink: 0;
-            {% comment %} positnkion: relative; {% endcomment %}
+            
         }
 
-        {% comment %} .left-panel h6 {
-            font-size: 16px;
-            text-align: center; {% endcomment %}
-            {% comment %} font-weight: 600; {% endcomment %}
-            
-            {% comment %} margin-bottom: 20px; {% endcomment %}
-            {% comment %} color: #353794; {% endcomment %}
-            {% comment %} text-align: center;
-        } {% endcomment %}
 
 
         .row {
@@ -130,14 +114,15 @@
 
         .content-panel {
             margin-left: 20px;
-            padding: 0 20px;
-            width: 950px;
+            padding: 0 30px;
+         
+            width: 980px;
             margin-right: 25px;
             height: calc(100vh-220px);
         }
 
         .tab-menu {
-            background-color: #f0f0ff;
+            background-color: #f8dcd7ff;
             padding: 10px 20px;
             border-radius: 10px 10px 0 0;
             display: flex;
@@ -164,7 +149,7 @@
         }
 
         .main-area {
-            background-color: #f4f2fb;
+            background-color:rgb(250, 242, 241);
             height: calc(100vh - 240px); /* Decreased height */
             border-radius: 0 0 15px 15px;
             padding: 20px;
@@ -183,7 +168,7 @@
 
 <body>
     <header>
-        {% comment %} <div class="student-info">{{ student_id }} {{ student_name }}</div> {% endcomment %}
+        
         <div class="header-center">
             <span class="livora-title">LIVORA</span>
             <span class="header-divider">|</span>
@@ -200,15 +185,14 @@
 
     <div class="container-fluid">
         <div class="row" >
-            <!-- Left side -->
-            <!--admin_dashboard.html -->
+        
             <div class="left-panel" style="margin-top: 100px;">
                 <div 
                 style="display: flex; 
                 justify-content: center; 
                 flex-direction: column;
                 align-items: left;
-                {% comment %} margin-bottom: 20px; {% endcomment %}
+               
                 ">
                     <p style="
                         text-align: left; 
@@ -227,19 +211,19 @@
             </div>
            
 
-            <!-- Right Panel -->
-            <div class="content-panel">                <div class="tab-menu">
+           
+            <div class="content-panel">                
+                <div class="tab-menu">
                     <a href="#" class="active" id="main-tab" onclick="changeTab('main')">Main Page</a>
-                    {% comment %} <a href="#" id="medical-tab" onclick="changeTab('medical')">Medical History</a> {% endcomment %}
                     <a href="#" id="history-tab" onclick="changeTab('history')">Request History</a>
-                    {% comment %} <a href="#" id="stdinfo-tab" onclick="changeTab('stdinfo')">Student Info</a> {% endcomment %}
-                </div><!-- Hidden div to store original main content -->
+                </div>
                 <div id="original-main-content" style="display: none;">
                     <div class="announcements">
                         <h4 style="font-weight: bold;">This Week's Announcements:</h4>
                         <form method="post" style="margin-bottom: 20px;">
                             {% csrf_token %}
-                            <textarea name="note" rows="3" placeholder="새 공지사항을 입력하세요" required                            style="width: calc(100% - 20px); resize: none; 
+                            <textarea name="note" rows="3" placeholder="새 공지사항을 입력하세요" required                            
+                            style="width: calc(100% - 20px); resize: none; 
                                 padding: 10px; font-size: 14px; 
                                 border-radius: 5px; border: 1px solid #ccc;"></textarea>
                             <button type="submit" name="add_note" 
@@ -271,7 +255,7 @@
                 </div>
 
                 <div class="main-area" id="main-area">
-                    <!--Dynamic Loading-->
+                    
                     <div class="announcements">
                         <h4 style="font-weight: bold;">This Week's Announcements:</h4>
 
@@ -305,14 +289,25 @@
         </div>
     </div>    <script>
 
-    function changeTab(tab) {
+    function getUrlParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }    function changeTab(tab) {
         document.querySelectorAll('.tab-menu a').forEach(link => link.classList.remove('active'));
         document.getElementById(`${tab}-tab`).classList.add('active');
-
+        
+  
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('tab', tab);
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.pushState({}, '', newUrl);
+        
         if (tab === 'main') {
             document.getElementById('main-area').innerHTML = document.getElementById('original-main-content').innerHTML;
-        } else {
-            fetch(`/admin-comp/admin_${tab}`)
+        } else {            
+          
+            const page = urlParams.get('page') || 1;
+            fetch(`/admin-comp/admin_${tab}/?page=${page}`)
                  .then(response => {
                     if (!response.ok) throw new Error("Failed to load tab content.");
                     return response.text();
@@ -325,12 +320,13 @@
                     document.getElementById('main-area').innerHTML = "<p>Error loading content.</p>";
                 });
         }
-    }        window.onload = () => {
+    }    window.onload = () => {
         const mainArea = document.getElementById('main-area');
         document.getElementById('original-main-content').innerHTML = mainArea.innerHTML;
         
-        loadSymptomComponent();
-        changeTab('main');
+      
+        const tabToLoad = getUrlParam('tab') || 'main';
+        changeTab(tabToLoad);
     };
     </script>
 </body>

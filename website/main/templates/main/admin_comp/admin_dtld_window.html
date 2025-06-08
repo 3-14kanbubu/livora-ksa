@@ -1,0 +1,521 @@
+{% csrf_token %}
+<div class="content-box">
+    <div class="header-section">
+        <h3>건강 보고서 상세</h3>
+        <div class="header-actions">
+            <div class="star-container">
+                <button type="button" class="star {% if report.starred %}starred{% endif %}" data-report-id="{{ report.id }}" title="Star this report">{% if report.starred %}★{% else %}☆{% endif %}</button>
+            </div>
+            <button onclick="goBackToHistory()" class="close-btn">닫기</button>
+        </div>
+    </div>
+
+    {% if report %}
+    <div class="two-column-layout">
+        
+        <div class="left-column">
+            <div class="details-grid">
+                <div class="detail-row">
+                    <span class="label">학번:</span>
+                    <span class="value">{{ report.user.userprofile.student_id }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">이름:</span>
+                    <span class="value">{{ report.user.get_full_name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">날짜:</span>
+                    <span class="value">{{ report.created_at|date:"M d, Y H:i" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">증상:</span>
+                    <span class="value">{{ report.symptoms|cut:"["|cut:"]"|cut:"'" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">지속 기간:</span>
+                    <span class="value">{{ report.duration }} days</span>
+                </div>
+                {% if report.extra_comments %}
+                <div class="detail-row">
+                    <span class="label">기타 설명:</span>
+                    <span class="value">{{ report.extra_comments }}</span>
+                </div>
+                {% endif %}
+                <div class="nurse-comment-section">
+                    <span class="label">학생에게 보내는 메시지:</span>
+                    <textarea id="nurse-comment-input-{{ report.id }}" 
+                            class="nurse-comment-input" 
+                            placeholder="Leave a message for the student...">{{ report.nurse_comment }}</textarea>
+                    <button onclick="submitNurseComment({{ report.id }})" class="btn-save-comment">메시지 저장</button>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="right-column">
+            <h3 class="section-title">의료 기록</h3>
+            <div id="medical-history-component" class="medical-history-content">
+                <div class="medical-info-section">
+                    <h3 class="info-title">Basic Information</h3>
+                    <div class="info-grid">
+                        <div class="info-field">
+                            <label>Date of Birth</label>
+                            <span>{{ report.user.medicalhistory.dob|default:"-" }}</span>
+                        </div>
+                        <div class="info-field">
+                            <label>Sex</label>
+                            <span>{{ report.user.medicalhistory.sex|default:"-"|title }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="medical-info-section">
+                    <h3 class="info-title">Health Information</h3>
+                    <div class="info-grid">
+                        <div class="info-field">
+                            <label>Allergies</label>
+                            <span>{{ report.user.medicalhistory.allergies|default:"-" }}</span>
+                        </div>
+                        <div class="info-field">
+                            <label>Other Medical Issues</label>
+                            <span>{{ report.user.medicalhistory.other_medical_issues|default:"-" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="medical-info-section">
+                    <h3 class="info-title">Emergency Contact</h3>
+                    <div class="info-grid">
+                        <div class="info-field">
+                            <label>Name</label>
+                            <span>{{ report.user.medicalhistory.emergency_contact_name|default:"-" }}</span>
+                        </div>
+                        <div class="info-field">
+                            <label>Relationship</label>
+                            <span>{{ report.user.medicalhistory.emergency_contact_relationship|default:"-" }}</span>
+                        </div>
+                        <div class="info-field">
+                            <label>Phone</label>
+                            <span>{{ report.user.medicalhistory.emergency_contact_phone|default:"-" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="medical-info-section">
+                    <h3 class="info-title">Healthcare Provider</h3>
+                    <div class="info-grid">
+                        <div class="info-field">
+                            <label>Name</label>
+                            <span>{{ report.user.medicalhistory.provider_name|default:"-" }}</span>
+                        </div>
+                        <div class="info-field">
+                            <label>Clinic</label>
+                            <span>{{ report.user.medicalhistory.provider_clinic|default:"-" }}</span>
+                        </div>
+                        <div class="info-field">
+                            <label>Phone</label>
+                            <span>{{ report.user.medicalhistory.provider_phone|default:"-" }}</span>
+                        </div>
+                        <div class="info-field">
+                            <label>Address</label>
+                            <span>{{ report.user.medicalhistory.provider_address|default:"-" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="medical-info-section">
+                    <h3 class="info-title">Insurance Information</h3>
+                    <div class="info-grid">
+                        <div class="info-field">
+                            <label>Provider</label>
+                            <span>{{ report.user.medicalhistory.insurance_provider|default:"-" }}</span>
+                        </div>
+                        <div class="info-field">
+                            <label>Validity</label>
+                            <span>
+                                {% if report.user.medicalhistory.insurance_start_date %}
+                                    {{ report.user.medicalhistory.insurance_start_date|date:"M d, Y" }} - 
+                                    {{ report.user.medicalhistory.insurance_end_date|date:"M d, Y"|default:"Present" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if report.user.medicalhistory.surgery_history %}
+                <div class="medical-info-section">
+                    <h3 class="info-title">Surgery History</h3>
+                    <div class="surgery-list">
+                        {% for surgery in report.user.medicalhistory.surgery_history %}
+                        <div class="surgery-item">
+                            <span class="surgery-name">{{ surgery.name }}</span>
+                            <span class="surgery-date">{{ surgery.date }}</span>
+                            {% if surgery.notes %}
+                            <span class="surgery-notes">{{ surgery.notes }}</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p>Report not found.</p>
+    {% endif %}
+</div>
+
+<style>
+    .content-box {
+        background-color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin: 20px;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 15px;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .close-btn {
+        background-color: #6b5eb7;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .close-btn:hover {
+        background-color: #574b96;
+    }
+
+    .two-column-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-top: 20px;
+    }
+
+    .left-column, .right-column {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+
+    .details-grid {
+        display: grid;
+        gap: 16px;
+    }
+
+    .detail-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 16px;
+        align-items: start;
+    }
+
+    .label {
+        color: #666;
+        font-weight: 600;
+    }
+
+    .value {
+        color: #333;
+    }
+
+    .nurse-comment-section {
+        margin-top: 20px;
+        display: grid;
+        gap: 8px;
+    }
+
+    .nurse-comment-input {
+        width: 100%;
+        min-height: 100px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        resize: vertical;
+        font-size: 14px;
+    }
+
+    .btn-save-comment {
+        background-color: #6b5eb7;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        width: fit-content;
+    }
+
+    .btn-save-comment:hover {
+        background-color: #574b96;
+    }
+
+    .star-container {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        z-index: 2;
+    }
+
+    .star {
+        cursor: pointer;
+        color: #ccc;
+        font-size: 20px;
+        user-select: none;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        position: relative;
+        z-index: 3;
+        border: none;
+        background: transparent;
+        padding: 0;
+        outline: none;
+    }
+
+    .star:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+    .star:active {
+        transform: scale(0.95);
+    }
+
+    .star:hover {
+        color: #ffd700;
+        text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .star.starred {
+        color: #ffd700;
+        text-shadow: 0 0 2px rgba(255, 215, 0, 0.3);
+    }
+
+    .right-column .section-title {
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .medical-history-content {
+        padding-right: 20px;
+        max-height: calc(100vh - 220px);
+        overflow-y: auto;
+    }
+
+    .medical-info-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .info-title {
+        color: #2c3e50;
+        font-size: 1.1em;
+        font-weight: 600;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .info-grid {
+        display: grid;
+        gap: 16px;
+    }
+
+    .info-field {
+        display: grid;
+        gap: 4px;
+    }
+
+    .info-field label {
+        color: #666;
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+
+    .info-field span {
+        color: #2c3e50;
+        padding: 6px 0;
+    }
+
+    .surgery-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .surgery-item {
+        background-color: white;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #e0e0e0;
+        display: grid;
+        gap: 4px;
+    }
+
+    .surgery-name {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    .surgery-date {
+        color: #666;
+        font-size: 0.9em;
+    }
+
+    .surgery-notes {
+        color: #666;
+        font-size: 0.9em;
+        font-style: italic;
+    }
+</style>
+
+<script>
+    function goBackToHistory() {
+     
+        fetch(`/mark-report-viewed/{{ report.id }}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        }).then(() => {
+            
+            window.location.href = '/admin-dashboard/?tab=history#history';
+        });
+    }
+
+    function submitNurseComment(reportId) {
+        const commentInput = document.getElementById(`nurse-comment-input-${reportId}`);
+        if (!commentInput) return;
+
+        const comment = commentInput.value;
+        fetch(`/save-nurse-comment/${reportId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ nurse_comment: comment })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('메시지가 저장되었습니다.');
+            } else {
+                alert('메시지 저장 중 오류가 발생했습니다: ' + (data.message || '알 수 없는 오류'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('메시지 저장에 실패했습니다. 다시 시도해주세요.');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      
+        const star = document.querySelector('.star');
+        if (star) {
+            star.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const reportId = this.dataset.reportId;
+                const isCurrentlyStarred = this.classList.contains('starred');
+                
+               
+                this.classList.toggle('starred');
+                this.textContent = isCurrentlyStarred ? '☆' : '★';
+                
+                fetch(`/toggle-star/${reportId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status !== 'success') {
+                        
+                        this.classList.toggle('starred');
+                        this.textContent = isCurrentlyStarred ? '★' : '☆';
+                    }
+                    this.blur();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+               
+                    this.classList.toggle('starred');
+                    this.textContent = isCurrentlyStarred ? '★' : '☆';
+                });
+            });
+
+          
+            star.addEventListener('mouseenter', function() {
+                if (!this.classList.contains('starred')) {
+                    this.textContent = '★';
+                }
+            });
+
+            star.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('starred')) {
+                    this.textContent = '☆';
+                }
+            });
+        }
+
+        
+        function loadMedicalHistory() {
+       
+            const medicalData = {
+                dob: 'Not provided',
+                sex: 'Not provided',
+                allergies: 'None reported',
+                otherIssues: 'None reported',
+                emergencyContact: 'No emergency contact provided',
+                insurance: 'No insurance information provided'
+            };
+
+            
+            document.getElementById('dob-display').textContent = medicalData.dob;
+            document.getElementById('sex-display').textContent = medicalData.sex;
+            document.getElementById('allergies-display').textContent = medicalData.allergies;
+            document.getElementById('other-issues-display').textContent = medicalData.otherIssues;
+            document.getElementById('emergency-contact-display').textContent = medicalData.emergencyContact;
+            document.getElementById('insurance-display').textContent = medicalData.insurance;
+        }
+
+        loadMedicalHistory();
+    });
+</script>

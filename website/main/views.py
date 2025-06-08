@@ -299,9 +299,10 @@ def get_student_list(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+from django.db import transaction
+
 @login_required
 @user_passes_test(is_admin)
-
 def get_student_details(request):
     name = request.GET.get('name')
     if not name:
@@ -330,11 +331,36 @@ def get_student_details(request):
         student_id = student.get('studentID')
         batch = student.get('batch')
 
-        # Find user by studentID (assuming you store it in a UserProfile model)
+        user = None
+        # Try to find user by student_id in UserProfile
         try:
             user = User.objects.get(userprofile__student_id=student_id)
         except User.DoesNotExist:
-            continue  # Skip if no matching user
+            # If not found by student_id, try to find user by name (username or full name)
+            try:
+                # Here you can adjust the filter based on your User model
+                # Assuming name param is first name or username
+                user = User.objects.get(username__iexact=name)
+            except User.DoesNotExist:
+                user = None
+
+            # If user found but no UserProfile or student_id set, create/update UserProfile
+            if user:
+                try:
+                    profile = user.userprofile
+                except UserProfile.DoesNotExist:
+                    profile = None
+
+                if not profile:
+                    # Create UserProfile with student_id
+                    with transaction.atomic():
+                        profile = UserProfile.objects.create(user=user, student_id=student_id)
+                elif profile.student_id != student_id:
+                    profile.student_id = student_id
+                    profile.save()
+
+        if not user:
+            continue  # Skip if no user found
 
         # Fetch health reports
         health_reports = HealthReport.objects.filter(user=user).order_by('-created_at').values()

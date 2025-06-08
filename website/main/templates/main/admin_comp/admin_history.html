@@ -1,63 +1,82 @@
-<!-- Admin History Component -->
+{% csrf_token %}
 <div class="content-box">
     <div class="header-section">
-        <h3>🩺 건강 보고서</h3>
+        <div class="title-with-counter">
+            <h3>🩺 건강 보고서</h3>
+            <span class="counter {% if unviewed_count == 0 %}counter-zero{% endif %}">
+                {{ unviewed_count }}
+            </span>
+        </div>
         <button class="monthly-report-btn">
+            target = "_blank"
             <i class="fas fa-chart-bar"></i>
             Monthly Report
         </button>
     </div>
-
+    
     <div class="report-list">
-        {% for report in health_reports %}
-            <div class="report-item" onclick="toggleDetails('report-{{report.id}}')">
-                <div class="report-summary">
-                    <span class="diamond">◇</span>
-                    <span class="date">{{ report.created_at|date:"M d, Y H:i" }}</span>
-                    <span class="student-name">{{ report.user.get_full_name }}</span>
-                    <span class="duration">{{ report.duration }} days</span>
-                    <span class="symptoms">{{ report.symptoms|truncatechars:30 }}</span>
-                    <span class="status {% if report.nurse_viewed %}viewed{% else %}new{% endif %}">
-                        {% if report.nurse_viewed %}Viewed{% else %}New{% endif %}
-                    </span>
-                </div>
-                <div id="report-{{report.id}}" class="report-details">
-                    <div class="details-grid">
-                        <div class="detail-row">
-                            <span class="label">Student ID:</span>
-                            <span class="value">{{ report.user.username }}</span>
+        {% if health_reports %}
+            {% for report in health_reports %}
+                <div class="report-item {% if report.nurse_viewed %}viewed{% endif %}" id="report-item-{{report.id}}">
+                    <div class="report-summary">
+                        <div class="star-container">
+                            <button type="button" class="star {% if report.starred %}starred{% endif %}" data-report-id="{{ report.id }}" title="Star this report">{% if report.starred %}★{% else %}☆{% endif %}</button>
                         </div>
-                        <div class="detail-row">
-                            <span class="label">Full Name:</span>
-                            <span class="value">{{ report.user.get_full_name }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Symptoms:</span>
-                            <span class="value">{{ report.symptoms }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Duration:</span>
-                            <span class="value">{{ report.duration }} days</span>
-                        </div>
-                        {% if report.extra_comment %}
-                        <div class="detail-row">
-                            <span class="label">Extra Comments:</span>
-                            <span class="value">{{ report.extra_comment }}</span>
-                        </div>
-                        {% endif %}
-                        <div class="detail-row">
-                            <span class="label">Status:</span>
-                            <span class="value status-badge {% if report.nurse_viewed %}viewed{% else %}new{% endif %}">
-                                {% if report.nurse_viewed %}Viewed{% else %}New{% endif %}
-                            </span>
-                        </div>
+                        <span class="diamond">◇</span>
+                        <a href="/admin-comp/admin_dtld_window/{{report.id}}/" class="clickable-area">
+                            <span class="col student-name">{{ report.user.get_full_name }}</span>
+                            <span class="col duration">{{ report.duration }} days</span>
+                            <span class="col symptoms">{{ report.symptoms|truncatechars:30|cut:"'"|cut:"["|cut:"]" }}</span>
+                            <span class="col date">{{ report.created_at|date:"M d, Y H:i" }}</span>
+                        </a>
                     </div>
                 </div>
-            </div>
-        {% empty %}
-            <p class="no-reports">No health reports submitted yet.</p>
-        {% endfor %}
+            {% endfor %}
+        {% else %}
+            <p class="no-reports">Error loading reports or no reports available</p>
+        {% endif %}
     </div>
+
+    
+    {% if page_obj %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?tab=history&page=1" class="page-link">«</a>
+        <a href="?tab=history&page={{ page_obj.previous_page_number }}" class="page-link">‹</a>
+    {% else %}
+        <span class="page-link disabled">«</span>
+        <span class="page-link disabled">‹</span>
+    {% endif %}
+
+    {% if page_obj.number|add:'-2' > 1 %}
+        <a href="?tab=history&page=1" class="page-link">1</a>
+        <span class="page-link disabled">...</span>
+    {% endif %}
+
+    {% for i in page_obj.paginator.page_range %}
+        {% if i >= page_obj.number|add:'-2' and i <= page_obj.number|add:'2' %}
+            {% if i == page_obj.number %}
+                <span class="page-link active">{{ i }}</span>
+            {% else %}
+                <a href="?tab=history&page={{ i }}" class="page-link">{{ i }}</a>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.number|add:'2' < page_obj.paginator.num_pages %}
+        <span class="page-link disabled">...</span>
+        <a href="?tab=history&page={{ page_obj.paginator.num_pages }}" class="page-link">{{ page_obj.paginator.num_pages }}</a>
+    {% endif %}
+
+    {% if page_obj.has_next %}
+        <a href="?tab=history&page={{ page_obj.next_page_number }}" class="page-link">›</a>
+        <a href="?tab=history&page={{ page_obj.paginator.num_pages }}" class="page-link">»</a>
+    {% else %}
+        <span class="page-link disabled">›</span>
+        <span class="page-link disabled">»</span>
+    {% endif %}
+    </div>
+    {% endif %}
 </div>
 
 <style>
@@ -66,7 +85,9 @@
         border-radius: 15px;
         padding: 20px;
         position: relative;
-        min-height: 400px;
+        min-height: calc(100vh - 180px);
+        display: flex;
+        flex-direction: column;
     }
 
     .header-section {
@@ -74,6 +95,7 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 20px;
+        flex-shrink: 0;
     }
 
     .monthly-report-btn {
@@ -93,30 +115,196 @@
         background-color: #574b96;
     }
 
+    
     .report-list {
-        max-height: calc(100vh - 200px);
-        overflow-y: auto;
+        flex-grow: 1;
+        margin-bottom: 20px;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        padding: 16px;
+        flex-shrink: 0;
+        border-top: 1px solid #eee;
+        background: white;
+    }
+
+    .pagination .page-link {
+        color: #6b5eb7;
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+    }
+
+    .pagination .page-link:hover {
+        background-color: #f8f8f8;
+        border-color: #6b5eb7;
+    }
+
+    .pagination .page-link.active {
+        background-color: #6b5eb7;
+        color: white;
+        border-color: #6b5eb7;
+    }
+
+    .pagination .page-link.disabled {
+        color: #ccc;
+        cursor: not-allowed;
+        pointer-events: none;
     }
 
     .report-item {
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         margin-bottom: 8px;
-        cursor: pointer;
         transition: all 0.2s;
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        font-weight: bold;
+        background-color: rgb(255, 255, 255);
+        cursor: pointer;
+    }
+
+    .report-item.viewed {
+        background-color:#f2f6fc;
+        font-weight: normal;
+        font-color: rgb(81, 81, 81);
     }
 
     .report-item:hover {
-        background-color: #f8f8f8;
+        background-color: #f5f5f5;
         border-color: #6b5eb7;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     .report-summary {
-        display: grid;
-        grid-template-columns: auto 150px 200px 100px 1fr 100px;
+        display: flex;
         align-items: center;
         padding: 12px 16px;
         gap: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .clickable-area {
+        display: grid;
+        grid-template-columns: minmax(150px, 200px) minmax(100px, 120px) minmax(200px, 1fr) minmax(120px, auto);
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+        cursor: pointer;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .clickable-area:hover {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .report-item:hover .clickable-area {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .col {
+        padding: 0 8px;
+        border-right: 1px solid #eee;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .col:last-child {
+        border-right: none;
+    }
+
+    .student-name {
+        font-weight: 700;
+        min-width: 150px;
+    }
+
+    .viewed .student-name {
+        font-weight: 400;
+    }
+
+    .duration {
+        min-width: 100px;
+    }
+
+    .symptoms {
+        min-width: 200px;
+    }
+
+    .date {
+        min-width: 120px;
+        font-size: 11px;
+        color: #666;
+        text-align: right;
+    }
+
+    .diamond {
+        color: #6b5eb7;
+        flex-shrink: 0;
+    }
+
+    .report-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .overlay-content {
+        background-color: white;
+        border-radius: 12px;
+        padding: 25px;
+        width: 80%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+    }
+
+    .overlay-details {
+        margin-top: 20px;
+    }
+
+    .report-item {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .report-item:hover {
+        background-color: #f5f5f5;
     }
 
     .diamond {
@@ -173,12 +361,176 @@
         color: #666;
         padding: 32px;
     }
+
+    .overlay-content {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .title-with-counter {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .counter {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 8px;
+        border-radius: 12px;
+        background-color: rgb(255, 242, 146);
+        color: rgb(81, 81, 81);
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .counter-zero {
+        background-color: #f2f6fc;
+        color: rgb(81, 81, 81);
+        font-weight: normal;
+    }
+
+    .star-container {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        z-index: 2;
+    }
+
+    .star {
+        cursor: pointer;
+        color: #ccc;
+        font-size: 20px;
+        user-select: none;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        position: relative;
+        z-index: 3;
+        border: none;
+        background: transparent;
+        padding: 0;
+        outline: none;
+    }
+
+    .star:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+    .star:active {
+        transform: scale(0.95);
+    }
+
+    .star:hover {
+        color: #ffd700;
+        text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .star.starred {
+        color: #ffd700;
+        text-shadow: 0 0 2px rgba(255, 215, 0, 0.3);
+    }
 </style>
 
 <script>
-    function toggleDetails(id) {
-        const details = document.getElementById(id);
-        const currentDisplay = details.style.display;
-        details.style.display = currentDisplay === 'block' ? 'none' : 'block';
+    document.addEventListener('DOMContentLoaded', function() {
+      
+        document.querySelectorAll('.star').forEach(star => {
+            star.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const reportId = this.dataset.reportId;
+                const isCurrentlyStarred = this.classList.contains('starred');
+                
+                
+                this.classList.toggle('starred');
+                this.textContent = isCurrentlyStarred ? '☆' : '★';
+                
+                fetch(`/toggle-star/${reportId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status !== 'success') {
+                
+                        this.classList.toggle('starred');
+                        this.textContent = isCurrentlyStarred ? '★' : '☆';
+                    }
+                    this.blur();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    
+                    this.classList.toggle('starred');
+                    this.textContent = isCurrentlyStarred ? '★' : '☆';
+                });
+            });
+
+        
+            star.addEventListener('mouseenter', function() {
+                if (!this.classList.contains('starred')) {
+                    this.textContent = '★';
+                }
+            });
+
+            star.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('starred')) {
+                    this.textContent = '☆';
+                }
+            });
+        });
+
+       
+        document.querySelectorAll('.clickable-area').forEach(area => {
+            area.addEventListener('click', function(e) {
+                e.preventDefault();
+                const reportId = this.closest('.report-item').id.replace('report-item-', '');
+                
+                fetch(`/mark-report-viewed/${reportId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json'
+                    }
+                }).then(() => {
+                    window.location.href = this.href;
+                });
+            });
+        });
+    });
+
+    function openReportDetail(reportId) {
+     
+        fetch(`/mark-report-viewed/${reportId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        });
+
+     
+        window.location.href = `/admin-comp/admin_dtld_window/${reportId}/`;
     }
 </script>

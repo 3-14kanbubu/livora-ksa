@@ -1,7 +1,6 @@
 {% load static %}
 
 <div class="admin-content">
-  <!-- Search Bar -->
   <div class="search-container mb-4">
     <input type="text" id="studentSearch" class="w-full p-2 border rounded-lg" placeholder="Search by student ID or name...">
     <button onclick="searchStudent()" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
@@ -9,15 +8,12 @@
     </button>
   </div>
 
-  <!-- Student List -->
   <div class="bg-white rounded-lg shadow-md p-4">
     <h2 class="text-xl font-bold mb-4">Student List</h2>
     <div id="studentList" class="space-y-2">
-      <!-- Student entries will be populated here -->
     </div>
   </div>
 
-  <!-- Student Info Overlay -->
   <div id="studentOverlay" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
     <div class="bg-white rounded-lg p-6 max-w-2xl mx-auto mt-20">
       <div class="flex justify-between items-center mb-4">
@@ -27,7 +23,6 @@
         </button>
       </div>
       <div id="studentDetails" class="space-y-4">
-        <!-- Student details will be populated here -->
       </div>
     </div>
   </div>
@@ -135,6 +130,5 @@ function closeOverlay() {
   document.getElementById('studentOverlay').classList.add('hidden');
 }
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', fetchStudentData);
 </script>
