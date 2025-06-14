@@ -7,11 +7,20 @@
                 {{ unviewed_count }}
             </span>
         </div>
-        <button class="monthly-report-btn">
-            target = "_blank"
-            <i class="fas fa-chart-bar"></i>
-            Monthly Report
-        </button>
+        <div class="download-section">
+            <div class="dropdown">
+                <button type="button" class="monthly-report-btn" id="monthlyReportBtn">
+                    <i class="fas fa-file-download"></i>
+                    <span>Monthly Report</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-content" id="monthSelector">
+                    {% for month in months %}
+                        <a href="/monthly-report/{{ month.value }}/" class="dropdown-item">{{ month.label }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
     
     <div class="report-list">
@@ -106,15 +115,152 @@
         padding: 8px 16px;
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
         cursor: pointer;
         transition: background-color 0.2s;
+        min-width: 180px;
+        position: relative;
+        z-index: 2;
     }
 
     .monthly-report-btn:hover {
         background-color: #574b96;
     }
 
+    .download-section {
+        position: relative;
+    }
+
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 4px);
+        background-color: white;
+        min-width: 180px;
+        max-height: 300px;
+        overflow-y: auto;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        z-index: 1000;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.2s ease-in-out;
+    }
+
+    .dropdown:hover .dropdown-content,
+    .dropdown.show .dropdown-content {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .dropdown:hover .fa-chevron-down,
+    .dropdown.show .fa-chevron-down {
+        transform: rotate(180deg);
+    }
+
+    .dropdown-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .dropdown-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .dropdown-content::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    .dropdown-item {
+        color: #333;
+        padding: 10px 16px;
+        text-decoration: none;
+        display: block;
+        transition: all 0.2s;
+        font-size: 0.9em;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .dropdown-item:first-child {
+        border-radius: 8px 8px 0 0;
+    }
+
+    .dropdown-item:last-child {
+        border-radius: 0 0 8px 8px;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f5f5f5;
+        color: #6b5eb7;
+    }
+
+    .dropdown-divider {
+        height: 1px;
+        background-color: #eee;
+        margin: 4px 0;
+    }
+
+    .monthly-report-btn {
+        min-width: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+    }
+    
+    .monthly-report-btn .fa-chevron-down {
+        margin-left: 8px;
+    }
+
+    .fa-chevron-down {
+        font-size: 0.8em;
+        margin-left: auto;
+    }
+
+    .dropdown.show .fa-chevron-down {
+        transform: rotate(180deg);
+    }
+
+    .dropdown.show .dropdown-content {
+        display: block;
+    }
+
+    .month-selector {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background-color: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 8px;
+        margin-top: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: none;
+        z-index: 1000;
+    }
+
+    .month-selector select {
+        padding: 8px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        width: 150px;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .month-selector select:focus {
+        border-color: #6b5eb7;
+    }
     
     .report-list {
         flex-grow: 1;
@@ -134,15 +280,16 @@
 
     .pagination .page-link {
         color: #6b5eb7;
-        padding: 8px 12px;
+        padding: 4px 8px;
         border: 1px solid #e0e0e0;
-        border-radius: 6px;
+        border-radius: 4px;
         text-decoration: none;
         transition: all 0.2s;
         display: flex;
         align-items: center;
         justify-content: center;
-        min-width: 40px;
+        min-width: 32px;
+        font-size: 13px;
     }
 
     .pagination .page-link:hover {
@@ -448,7 +595,50 @@
     }
 </style>
 
+
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdown = document.querySelector('.dropdown');
+        const dropdownBtn = document.querySelector('.monthly-report-btn');
+        const dropdownContent = document.querySelector('.dropdown-content');
+        let isDropdownOpen = false;
+
+        dropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            isDropdownOpen = !isDropdownOpen;
+            if (isDropdownOpen) {
+                dropdown.classList.add('show');
+            } else {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        
+        dropdownBtn.addEventListener('mouseenter', function(e) {
+            if (!isDropdownOpen) {
+                dropdown.classList.add('show');
+            }
+        });
+
+        dropdownBtn.addEventListener('mouseleave', function(e) {
+            if (!isDropdownOpen) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+
+        document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('show');
+                isDropdownOpen = false;
+            }
+        });
+
+        dropdownContent.addEventListener('click', function(e) {
+            e.stopPropagation();
+    });
+
+
     document.addEventListener('DOMContentLoaded', function() {
       
         document.querySelectorAll('.star').forEach(star => {
@@ -517,6 +707,41 @@
                     window.location.href = this.href;
                 });
             });
+        });
+
+        const monthlyReportBtn = document.getElementById('monthlyReportBtn');
+        const monthSelector = document.getElementById('monthSelector');
+        const monthSelect = document.getElementById('monthSelect');
+
+        function populateMonths() {
+            const months = [];
+            for (let i = 0; i < 12; i++) {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                const monthYear = date.toISOString().slice(0, 7); // YYYY-MM format
+                const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                months.push({ value: monthYear, label: monthName });
+            }
+
+            monthSelect.innerHTML = months.map(month => 
+                `<option value="${month.value}">${month.label}</option>`
+            ).join('');
+        }
+
+        populateMonths();
+
+        monthlyReportBtn.addEventListener('mouseenter', () => {
+            monthSelector.style.display = 'block';
+        });
+
+        const monthlyReportContainer = document.querySelector('.monthly-report-container');
+        monthlyReportContainer.addEventListener('mouseleave', () => {
+            monthSelector.style.display = 'none';
+        });
+
+        monthSelect.addEventListener('change', (e) => {
+            const selectedMonth = e.target.value;
+            window.open(`/admin-comp/monthly-report/${selectedMonth}/`, '_blank');
         });
     });
 

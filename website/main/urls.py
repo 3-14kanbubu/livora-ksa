@@ -18,6 +18,7 @@ urlpatterns = [
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('submit-health-report/', views.submit_health_report, name='submit_health_report'),
     path('request-history/', views.request_history, name='request_history'),
+    path('monthly-report/<str:year_month>/', views.monthly_report, name='monthly_report'),
     path('upload-medical-history/', views.upload_medical_history, name='upload_medical_history'),
     path('medical-history/', views.medical_history_page, name='medical_history_page'),
     path('api/students/', views.get_student_list, name='get_student_list'),

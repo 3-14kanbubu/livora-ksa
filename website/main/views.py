@@ -1,21 +1,27 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.urls import reverse
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
-from django.core.cache import cache
+from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import HealthReport, NurseStatus, NurseAnnouncement, MedicalHistory,UserProfile
-from .forms import HealthReportForm,MedicalHistoryForm
+from django.core.cache import cache
+from django.template.loader import render_to_string
+from django.template import TemplateDoesNotExist
+from django.views.decorators.http import require_POST
+from datetime import datetime, date
 import requests, json
 from django.conf import settings
-from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.template import TemplateDoesNotExist
-from django.http import HttpResponse 
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+import csv
+from io import StringIO
+from .models import HealthReport, NurseStatus, NurseAnnouncement, MedicalHistory,UserProfile
+from .forms import HealthReportForm,MedicalHistoryForm
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
 def home(request):
     return render(request, 'main/livora.html')
@@ -245,6 +251,25 @@ def admin_comp(request, component_name):
         reports_per_page = 10  
         reports = HealthReport.objects.all().order_by('-created_at')
         
+        months = []
+        current_date = datetime.now()
+        for i in range(12):
+            if i == 0:
+                date = current_date.replace(day=1)
+            else:
+                if current_date.month - i > 0:
+                    date = current_date.replace(day=1, month=current_date.month - i)
+                else:
+                    year_diff = ((i - current_date.month) // 12) + 1
+                    month = current_date.month - i + (12 * year_diff)
+                    date = current_date.replace(day=1, month=month, year=current_date.year - year_diff)
+            
+            months.append({
+                'value': date.strftime('%Y-%m'),
+                'label': date.strftime('%B %Y')
+            })
+        context['months'] = months
+        
     
         unviewed_count = reports.filter(nurse_viewed=False).count()
         context['unviewed_count'] = unviewed_count
@@ -432,7 +457,49 @@ def toggle_star(request, report_id):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     
+@login_required
+@user_passes_test(is_admin)
+def monthly_report(request, year_month):
+    if not request.user.is_staff: 
+        return HttpResponse('Unauthorized', status=401)
+    
+    
+    reports = HealthReport.objects.all()
+    
 
+    if year_month != 'all':
+        year = int(year_month[:4])
+        month = int(year_month[5:7])
+        
+        start_date = datetime(year, month, 1)
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1)
+        else:
+            end_date = datetime(year, month + 1, 1)
+            
+        reports = reports.filter(created_at__gte=start_date, created_at__lt=end_date)
+    
+
+    reports = reports.order_by('-created_at')
+    
+
+    response = HttpResponse(content_type='text/csv')
+    filename = 'health_reports.csv' if year_month == 'all' else f'health_reports_{year_month}.csv'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Date Submitted', 'Student Name', 'Symptoms', 'Duration (days)'])
+    
+    for report in reports:
+        symptoms = report.symptoms.strip('[]\'').replace('\'', '').replace(',', ', ')
+        writer.writerow([
+            report.created_at.strftime('%Y-%m-%d %H:%M'),
+            report.user.get_full_name(),
+            symptoms,
+            report.duration
+        ])
+    
+    return response
 
 from django.http import JsonResponse
 
