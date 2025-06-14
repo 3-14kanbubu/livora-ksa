@@ -36,3 +36,4 @@ sqlparse==0.5.3
 types-PyYAML==6.0.12.20250402
 typing_extensions==4.13.2
 xraydb==4.5.6
+gunicorn==21.2.0
