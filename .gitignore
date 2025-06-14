@@ -56,6 +56,7 @@ Thumbs.db
 
 # Zone Identifier files (Windows compatibility)
 *.Zone.Identifier
+*:Zone.Identifier
 
 # Static files (collected)
 staticfiles/
